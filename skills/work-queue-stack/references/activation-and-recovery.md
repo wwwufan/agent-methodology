@@ -148,10 +148,45 @@ python3 $S show|survey|verify|retro --campaign <id>      # 见 ../SKILL.md
 
 | 身份 | 启动 / 恢复时做什么 |
 | --- | --- |
-| `guided-goal-orchestrator`（受控目标模式） | 先 `stacks` 探测：**已存在 → `ensure` 接线，不提问**；不存在 → `propose` 申请，未获批准不得创建、不得声称已启用；拒绝 → 写进 `remaining_risks` 并在自然边界重提 |
+| `guided-goal-orchestrator`（受控目标模式） | 先 `stacks` 探测：**已存在 → `ensure` 接线，不提问**；不存在 → `propose` 申请，未获批准不得创建、不得声称已启用；拒绝 → 写进 `remaining_risks` 并在自然边界重提。**栈绑总目标、与 `goal-ledger.md` 一对一**（从该 Skill 绝对约束 9 迁入的理由：受控模式下阶段之间的收尾工作——回写问题清单、更新台账、决定 push——恰恰发生在 Goal 释放之后，此时栈是唯一的状态载体，这正是它必须绑 campaign 而不能绑 Goal 的原因） |
 | `multi-phase-plan-orchestrator`（多阶段编排） | 同上；且若存在**未关闭帧**，先报告并请示收口或 `parked`，不得在未收口的栈上直接开新阶段 |
 | `single-phase-execution-loop`（单阶段编排） | **只接线不创建**：栈存在才 `capture`/`pop`/`verify`；不存在**不得创建**，改为写 `remaining_risks`/`issues` 并按本文件评估后 `propose` 申请 |
 | 直接做 / 普通对话 | 不启用；除非用户显式声明，或 `propose` 获批准 |
+
+### 通用接线动作表（三个编排身份共用；从 `single-phase-execution-loop/SKILL.md` 逐字迁入）
+
+| 时点 | 机械动作 | 强度 |
+| --- | --- | --- |
+| Executor 返回 `remaining_risks` | 逐条 `capture --found-in <Phase 帧> --disposition blocks\|spawns\|note` | 必须 |
+| Reviewer 返回 `residual_risks` / `issues` | 逐条 `capture`；FAIL 归因写进 `--text` | 必须 |
+| 达到 `max_retries` 转 blocked | `capture` → `pop --terminal escalated`，并在 `docs/operations/issues.md` 立项 | 必须 |
+| **PASS 推进前** | **`verify` 必须 `exit 0`**，否则不得写 `progress_tracker`、不得进入下一阶段 | **fail-closed 门禁** |
+| PASS 推进时 | `pop` 当前 Phase 帧，`--note` 写 Reviewer 结论与证据路径 | 必须 |
+| 帧的标题/判据写错、或验收口径变了 | `amend --frame <未关闭帧>`（改动自动留痕 `event_log`）；**终态帧不可改写**，要纠正就新压一帧说明返工 | 必须 |
+| 全部 Phase 收工 / 计划中止 / 交付前 | `retro`（只读）→ 原样转达「放弃的方案」「明确搁置」「用户方向切换」三段 | 必须 |
+| **任何时点** | **不得 `ensure` / 首次 `push` 创建栈**（只接线不创建；确有需要走 `propose` 申请，用户批准才建） | **禁止** |
+
+### `verify` 门禁与 `retro` 语义（逐字迁入）
+
+`verify` 失败意味着存在未处置的衍生登记（`pending`），或 `blocks`/`spawns` 未落到某个帧或指针。
+这是**门禁而不是提醒**：先 `resolve` 干净再推进；不得跳过 `verify` 绕过。
+
+`retro` 同理不是可选项：收工报告只讲「完成 N 个 Phase」会丢掉最贵的信息——哪些方案被放弃、
+哪些被搁置、用户中途改了几次道。这三段来自只追加的 `event_log`，**推进时没留痕就复盘不出来**，
+所以每一次改道与放弃都必须在发生的当时落进栈（`activate` / `pop --terminal wontfix|parked` + `--note`），
+不允许事后补记。
+
+### 栈帧与 Phase / 阶段的对应关系（避免栈被噪音淹没；逐字迁入）
+
+- **一个 Phase 一帧**：`push --title "Phase N <阶段名>" --criteria <该阶段验收标准>`。
+- Phase 内的**返工重试不另立子帧**——retry 计数的真源是 `progress_tracker`，重复登记只会制造两份状态。
+- 只有**阶段范围外的新问题**才 `push --parent <Phase 帧>` 成子帧；范围内的实现偏差走 FAIL 分流规则 1，
+  由 Executor 在当前 Phase 内修掉。
+- 判定「范围内/范围外」的依据是 `execution_plan` 的当前阶段章节与 `global_constraints`；
+  拿不准时按**范围外**处理（先登记，宁可多登不可漏登）。
+
+注：上文「FAIL 分流规则 1」= `single-phase-execution-loop/references/role-contract.md` §3 的第 1 类
+（实现偏差 / 修复可直接编码 → `retry + 1` 交 Executor）。
 
 ## 禁止行为
 

@@ -22,15 +22,8 @@ description: >-
 8. 阶段进入 `awaiting_user_approval` 前，若该 campaign 存在推进栈
    （`workstacks/<campaign>/active-work-stack.json`），`stack.py verify` 必须返回 `exit 0`；
    存在未处置衍生登记时不得交付评审包。
-9. 启动与恢复本 Skill 时必须先运行 `stack.py stacks` 探测该 campaign 有没有推进栈：
-   **已存在** → `stack.py ensure --campaign <campaign_id>`（幂等接线，**零提问**）；
-   **不存在** → 按 `work-queue-stack/references/activation-and-recovery.md` 的六维信号评估复杂度并
-   `stack.py propose` 打印申请卡，**未获用户批准不得创建、不得声称已启用**；被拒则把新问题写进
-   Executor 的 `remaining_risks` 与 Reviewer 的 `issues`/`residual_risks`，在当轮交付摘要留痕，
-   并只在下一个自然边界（阶段收口、交付前）重提一次。
-   栈绑**总目标**、与 `workstacks/<campaign_id>/goal-ledger.md` 一对一，跨阶段跨窗口续用；**不得**为某个阶段、
-   某次对话或某一轮另起一个栈。理由：受控模式下阶段之间的收尾工作（回写问题清单、更新台账、决定 push）
-   恰恰发生在 Goal 释放之后，此时栈是唯一的状态载体 —— 这正是它必须绑 campaign 而不能绑 Goal 的原因。
+9. 启动与恢复本 Skill 时按 `work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」guided 行执行：先 `stack.py stacks` 探测该 campaign 有没有推进栈，**已存在** → `stack.py ensure --campaign <campaign_id>`（幂等接线，**零提问**）；**不存在** → 按六维信号评估复杂度并 `stack.py propose` 打印申请卡，**未获用户批准不得创建、不得声称已启用**；被拒则把新问题写进 Executor 的 `remaining_risks` 与 Reviewer 的 `issues`/`residual_risks`，在当轮交付摘要留痕，并只在下一个自然边界（阶段收口、交付前）重提一次。
+   本身份覆盖项：栈绑**总目标**、与 `workstacks/<campaign_id>/goal-ledger.md` 一对一，跨阶段跨窗口续用；**不得**为某个阶段、某次对话或某一轮另起一个栈（「阶段间收尾发生在 Goal 释放之后、栈是唯一状态载体」的理由句已迁入真源的身份表 guided 行）。
 
 ## 总目标台账
 
@@ -120,13 +113,9 @@ phases/
 3. Reviewer 独立只读复核并返回 `PASS` 或 `FAIL`。
 4. `FAIL` 属于实现偏差或证据缺失时，在当前 Goal 内交给 Executor 修复；属于设计缺口时停止并要求回到计划模式。默认最多重试 3 次。
 
-#### 角色字段契约以 `single-phase-execution-loop` 为准（避免两份定义漂移）
+#### 角色字段契约以 `single-phase-execution-loop/references/role-contract.md` 为准（避免两份定义漂移）
 
-三角色的**输入输出字段定义**以 `single-phase-execution-loop` 为唯一真源，本 Skill 不重复定义：
-Designer 的 `design_status` / `recommended_design` / `executor_instructions` / `validation_strategy` /
-`reviewer_focus`；Executor 的 `implementation_summary` / `changed_surface` / `validation` /
-`remaining_risks`；Reviewer 的 YAML `review_id` / `verdict` / `checks` / `issues` / `fix_instructions` /
-`residual_risks`。两处冲突时以 `single-phase-execution-loop` 为准，并修正本 Skill 的引用。
+三角色的**输入输出字段定义**以 `single-phase-execution-loop/references/role-contract.md` §2 为唯一真源，本 Skill 不重复定义、也不在此枚举字段名（枚举即第二真源，必然漂移）；冲突时以该文件为准，并修正本 Skill 的引用。
 
 本 Skill 只**覆盖**受控模式特有的更强约束：
 
@@ -140,8 +129,7 @@ Designer 的 `design_status` / `recommended_design` / `executor_instructions` / 
 
 #### 推进栈接线
 
-Executor 的 `remaining_risks`、Reviewer 的 `residual_risks` / `issues` 必须逐条 `capture` 进推进栈；
-分流与门禁细节以 `single-phase-execution-loop` 的「推进栈接线」章节为准，本 Skill 不重复定义。
+接线规则（通用接线动作表、`verify` 门禁与 `retro` 语义、栈帧与阶段的对应关系）以 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」为唯一真源，本 Skill 不重复定义分流与门禁细节；本身份覆盖项：Executor 的 `remaining_risks`、Reviewer 的 `residual_risks` / `issues` 必须逐条 `capture` 进推进栈，且 `awaiting_user_approval` 前的 `verify` `exit 0` 门禁（绝对约束 8）不得降级。
 
 每次委托前执行绑定校验，并在子代理上下文中写明 `campaign_id`、阶段绑定、当前 Goal 授权和“不得跨阶段”。
 
@@ -186,7 +174,7 @@ Codex 的 Goal 是**独占、串行、不可暂停**的资源：存在未完成 
 
 ## 恢复与输出
 
-恢复时先按 `work-queue-stack` 的「启用与恢复路由」定位栈：`stack.py stacks` 读全局清单与 `workstacks/_current.json` 指针；指针有效（栈存在、`status=open`）且与当前总目标一致 → 直接 `stack.py ensure --campaign <campaign_id>`（幂等接线，不会新建第二个栈）；指针无效或缺失 → 按语义匹配（素材 = `title` + `campaign_id` + 台账总目标 + 最近帧标题），**命中唯一**才 `use` 绑定并接线，命中多个或零个时列候选由用户选、不得猜。随后读取台账、阶段快照、当前 Goal 状态和最后一份角色输出，然后决定继续当前 Goal、等待用户批准或要求切换模式。不得仅凭聊天历史推断状态。
+恢复时先按 `work-queue-stack/references/activation-and-recovery.md`「恢复规则：由语义识别该用哪个栈」定位并接线栈（`stacks` 探测 → 指针有效且与当前总目标一致则直接接线；指针无效或缺失则语义匹配，**命中唯一**才 `use` 绑定，命中多个或零个时列候选由用户选、**不得猜**），本 Skill 不重复定义探测与匹配细节。随后读取台账、阶段快照、当前 Goal 状态和最后一份角色输出，然后决定继续当前 Goal、等待用户批准或要求切换模式。不得仅凭聊天历史推断状态。
 
 每次停下都显示：总目标版本、当前阶段及版本、阶段状态、Goal 绑定、最近门禁结论、下一项只能由谁执行（用户或 Codex），以及需要用户发送的准确指令。
 此外，若该 campaign 存在推进栈，必须原样附上 `stack.py show` 的**推进树与位置指针**两段，

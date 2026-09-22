@@ -2,9 +2,9 @@
 """给一个新项目铺好 agent-methodology 的项目侧前提：角色配置 + Codex 围栏注册 + 长期池文档 + workstacks/。
 
 用法（完整参数以 --help 为准）：
-    python3 <本仓库>/scripts/bootstrap_project.py <PROJECT>
-    python3 <本仓库>/scripts/bootstrap_project.py <PROJECT> --backend codex --model <slug>
-    python3 <本仓库>/scripts/bootstrap_project.py <PROJECT> --dry-run     # 打印渲染全文，零写盘
+    python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT>
+    python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT> --backend codex --model <slug>
+    python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT> --dry-run     # 打印渲染全文，零写盘
 
 铺什么：
     --backend codex   → .codex/agents/{designer,executor,reviewer}.toml + .codex/config.toml 围栏注册
@@ -31,6 +31,8 @@
 不留下半成品态（半成品比什么都没铺更糟 —— 幂等规则是「路径存在即 skipped、不比对内容」，
 残留文件永远不会被复检，两次 --model 不同就会静默留下与用户意图不符的角色配置）。
 """
+
+# <方法论仓库> = agent-methodology 仓库根目录（装着 skills/、scripts/、templates/ 的那一层）；用户可见定义见 README.md「占位符约定」。
 
 from __future__ import annotations
 
@@ -67,8 +69,13 @@ DEFAULT_REASONING_EFFORT = "medium"
 DEFAULT_CURSOR_MODEL = "gpt-5.6-sol-medium"
 DEFAULT_CURSOR_EXECUTOR_MODEL = "gpt-5.3-codex"
 DEFAULT_PROJECT_IDENTITY = "本项目"
+# issue 6：文案**由默认值常量派生**，不再手抄第二份模型名，也不再把「来源项目名 + 本活动的内部
+# 问题编号」带进每一个新项目 —— 那两样东西都不会随仓库 promote，新项目里读到只会一头雾水。
+# 改默认值时本警告自动跟着变，不存在「文案与实现两套说法」。
 CURSOR_MODEL_WARNING = (
-    "[WARN] Cursor 模型名取自 diamond-agent 现值，请按本机 Cursor 可用模型确认（open_questions Q4）"
+    f"[WARN] Cursor 模型名未显式指定，使用仓库默认值：designer/reviewer={DEFAULT_CURSOR_MODEL}、"
+    f"executor={DEFAULT_CURSOR_EXECUTOR_MODEL}（未验证在他机可用）；"
+    "可用 --cursor-model / --cursor-executor-model 覆盖"
 )
 
 RESIDUAL_RE = re.compile(r"\{\{[^}]*\}\}?")
@@ -563,8 +570,8 @@ def _run(args) -> int:
 
     # ---- warnings（C2：兑现 R3 的「不静默」——探测退出码与 Cursor 模型默认值都要能被机器读到）
     # 两个 Cursor 模型都由用户显式给出时不再发这条警告：`CURSOR_MODEL_WARNING` 说的是
-    # 「模型名取自 diamond-agent 现值」，用户既然自己给了值，这句话就是假的 ——
-    # 继续打印它等于一条谎报警告。**文案本体不改**（issue 6 属 Phase 3），改的只是「何时说」。
+    # 「模型名未显式指定，使用仓库默认值」，用户既然自己给了值，这句话就是假的 ——
+    # 继续打印它等于一条谎报警告。故触发条件是「本次确实用上了仓库默认值」，不是「跑了一次 bootstrap」。
     cursor_model_defaulted = want_cursor and not (args.cursor_model and args.cursor_executor_model)
     warnings = []
     if probe_note:

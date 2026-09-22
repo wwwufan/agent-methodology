@@ -2,10 +2,10 @@
 """把本仓库 skills/ 下的方法论 skill 以**绝对路径软链**挂载到 Codex 个人根或项目 .agents/skills/。
 
 用法（完整参数以 --help 为准）：
-    python3 <本仓库>/scripts/install.py                        # 安装到 <codex_home>/skills
-    python3 <本仓库>/scripts/install.py --check                # 只检测漂移，零副作用
-    python3 <本仓库>/scripts/install.py --project-link <PROJ>  # 目标根改为 <PROJ>/.agents/skills
-    python3 <本仓库>/scripts/install.py --mode uninstall       # 只删指向本仓库的软链
+    python3 <方法论仓库>/scripts/install.py                        # 安装到 <codex_home>/skills
+    python3 <方法论仓库>/scripts/install.py --check                # 只检测漂移，零副作用
+    python3 <方法论仓库>/scripts/install.py --project-link <PROJ>  # 目标根改为 <PROJ>/.agents/skills
+    python3 <方法论仓库>/scripts/install.py --mode uninstall       # 只删指向本仓库的软链
 
 退出码：
     0 = 全部成功或全部无需动作（含 --dry-run 下"本来就全对"）
@@ -21,6 +21,8 @@
     不写 .install-manifest.json：机器相关状态进仓库会脏 Git，且一旦与磁盘不符就成新的漂移源；
     旧 target 打印在安装日志里已足够追溯。
 """
+
+# <方法论仓库> = agent-methodology 仓库根目录（装着 skills/、scripts/、templates/ 的那一层）；用户可见定义见 README.md「占位符约定」。
 
 from __future__ import annotations
 
@@ -304,7 +306,9 @@ def main() -> int:
             rows.append(_row("<target-root>", "fail", "missing-root", "missing-root",
                              "目标根不存在；--check 零副作用，不创建",
                              [f"期望目标根：{target_root}",
-                              "安装请去掉 --check 后重跑 scripts/install.py"],
+                              # 运行时指引给**解析后的真实路径**：裸的仓库级相对路径只在 cwd 恰好是
+                              # 仓库根时才对（doctor 第 12 组把这条口径固化成机械判据）。
+                              f"安装请去掉 --check 后重跑 {Path(__file__).resolve()}"],
                              None, None, scope="root", path=str(target_root)))
             emit(rows, args.json,
                  envelope={"mode": mode, "target_root": str(target_root),

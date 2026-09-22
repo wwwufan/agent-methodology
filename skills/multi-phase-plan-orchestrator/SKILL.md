@@ -41,13 +41,9 @@ description: >-
 3. 按「编排后端适配」识别当前接口并校验对应的 Cursor 或 Codex 角色配置
 4. 向用户报告：活动名称、当前阶段、当前工作分支、未完成项（中文）
 5. 默认沿用当前工作分支执行各阶段；仅当用户明确要求时才创建新分支
-6. 运行 `stack.py stacks` 探测该活动有没有推进栈：**已存在** → `stack.py ensure --campaign <活动标识>`
-   幂等接线（只回显、不新建、不改 `activation`），随后 `stack.py show` 查看全栈；
-   **不存在** → 按 `work-queue-stack/references/activation-and-recovery.md` 的六维信号评估并
-   `stack.py propose` 打印申请卡，**未获用户批准不得创建、不得声称已启用**；被拒则把新问题写进
-   各 Phase 的 `remaining_risks` / `issues`，并在阶段收口处重提一次（同一轮内不重复申请）。
-   栈绑**总目标**（campaign）而非阶段或对话窗口，因此跨阶段、跨窗口续用同一个栈，**不得**为新一轮另起一个。
-   若存在**未关闭帧**，先向用户报告并请示收口或 `parked`，**不得**在未收口的栈上直接开新阶段（防止旧帧静默失效）
+6. 按 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」multi-phase 行执行：`stack.py stacks` 探测 → **已存在**则 `stack.py ensure --campaign <活动标识>` 幂等接线（只回显、不新建、不改 `activation`），随后 `stack.py show` 查看全栈；**不存在**则按六维信号评估并 `stack.py propose` 打印申请卡，**未获用户批准不得创建、不得声称已启用**；被拒则把新问题写进各 Phase 的 `remaining_risks` / `issues`，并在阶段收口处重提一次（同一轮内不重复申请）。
+   本身份覆盖项：栈绑**总目标**（campaign）而非阶段或对话窗口，因此跨阶段、跨窗口续用同一个栈，**不得**为新一轮另起一个。
+   若存在**未关闭帧**，先向用户报告并请示收口或 `parked`，**不得**在未收口的栈上直接开新阶段（防止旧帧静默失效）。
 
 若用户发起**新的重构活动**，须先具备或创建对应的 `execution_plan` 与 `progress_tracker`，并在对话中声明绑定（或新增「活动实例」条目后再启动）。
 
@@ -137,7 +133,7 @@ phase_authorization: 当前 Phase 已获阶段级授权，主代理只负责编�
 阻塞项与阶段范围外的问题还必须落进推进栈：`capture` 后按 `blocks`/`spawns`/`note` 处置，
 跨轮次缺陷 `pop --terminal escalated` 并在 `docs/operations/issues.md` 立项。
 **不得让阻塞只存在于对话里**——对话会被压缩、换模型或跨天丢弃。
-接线细节以 `single-phase-execution-loop` 的「推进栈接线」章节为准，本 Skill 不重复定义。
+接线细节以 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」为准，三角色字段契约与 FAIL 四类分流以 `single-phase-execution-loop/references/role-contract.md` 为准，本 Skill 不重复定义。
 
 最后一个 Phase PASS、或整个计划被中止时，收尾报告必须附 `stack.py retro` 的
 「放弃的方案 / 明确搁置 / 用户方向切换」三段——多阶段计划跨越数天，

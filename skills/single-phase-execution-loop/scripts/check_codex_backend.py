@@ -11,6 +11,8 @@
 退出码：0 = ready；1 = not-ready（stdout 上是一个 JSON 文档，零 traceback）；2 = 用法错误。
 """
 
+# <方法论仓库> = agent-methodology 仓库根目录（装着 skills/、scripts/、templates/ 的那一层）；用户可见定义见 README.md「占位符约定」。
+
 from __future__ import annotations
 
 import argparse
@@ -29,9 +31,12 @@ REASON_ROLE_CONFIG = "role-config"
 REASON_MODEL_BINDING = "model-binding"
 REASON_PROBE = "probe"
 
+# RR29：hint 里的脚本路径改为 `<方法论仓库>/…` 占位符形态。裸程序名（`bootstrap_project.py`）
+# 只在「cwd 恰好是仓库根」时才照做得通，而本脚本的调用方（编排 skill）cwd 是**项目根**，
+# 于是那条指引在真实调用场景下必然失败。占位符的定义行就在本文件 docstring 之后。
 HINT_ROLE_CONFIG = (
-    "运行 bootstrap_project.py <repo-root> --backend codex 铺设 .codex/config.toml 的围栏注册"
-    "与三角色配置，然后重跑本检查；已有配置则按 reason 里的具体缺失项补齐。"
+    "运行 `<方法论仓库>/scripts/bootstrap_project.py <PROJECT> --backend codex` 铺设 "
+    ".codex/config.toml 的围栏注册与三角色配置，然后重跑本检查；已有配置则按 reason 里的具体缺失项补齐。"
 )
 
 

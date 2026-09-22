@@ -42,6 +42,7 @@
 - `2` 用法/环境错误（栈文件缺失或损坏、frame_id 不存在、状态迁移非法、深度超限、
   `push` 时栈不存在——创建栈只有 `ensure` 一个门，防止 `--campaign` 打错导致栈分叉）
 """
+# <方法论仓库> = agent-methodology 仓库根目录（装着 skills/、scripts/、templates/ 的那一层）；用户可见定义见 README.md「占位符约定」。
 
 from __future__ import annotations
 

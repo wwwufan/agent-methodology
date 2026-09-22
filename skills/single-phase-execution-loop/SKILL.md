@@ -73,22 +73,7 @@ Codex collaboration 后端无法强制每个子代理使用独立 sandbox。主�
 
 调用条件：阶段级授权已生效，且当前阶段尚未完成设计。
 
-必须输入：
-
-- `phase_authorization`：用户已授权本 Phase 进入单阶段循环
-- `design_id`：`<campaign>-phase-N`
-- 当前阶段目标/范围/验收标准
-- 当前上下文与历史失败信息
-- 阶段涉及的模块、目录或边界提示
-- 全局约束
-
-必须输出：
-
-- `design_status`：`READY` | `NEEDS_CONFIRMATION` | `BLOCKED`
-- `recommended_design`
-- `executor_instructions`
-- `validation_strategy`
-- `reviewer_focus`
+字段契约（必须输入 / 必须输出清单）见 `references/role-contract.md` §2「Designer（Step 0）」——唯一真源，本 Skill 不重复定义。
 
 决策：
 
@@ -99,133 +84,32 @@ Codex collaboration 后端无法强制每个子代理使用独立 sandbox。主�
 
 调用条件：Designer 返回 `READY`，且当前阶段需要实施、修复或验收取证。
 
-必须输入：
-
-- `phase_authorization`：用户已授权本 Phase 进入单阶段循环
-- `campaign` 活动标识
-- 当前阶段完整执行章节
-- Designer 输出（完整）
-- 全局约束
-- 当前工作分支名（仅用于追踪上下文；不自动新建阶段分支）
-- 若 `retry > 0`，附上上一轮 reviewer `fix_instructions`
-
-必须输出：
-
-- `implementation_summary`
-- `changed_surface`
-- `validation`（命令与关键输出）
-- `remaining_risks`（**每条都必须 `capture` 进推进栈**，见「推进栈接线」；不得只留在对话里）
+字段契约（必须输入 / 必须输出清单）见 `references/role-contract.md` §2「Executor（Step 1）」——唯一真源，本 Skill 不重复定义。
 
 ### Step 2: Reviewer
 
 调用条件：Executor 返回实施或取证结果，且需要门禁复核。
 
-必须输入：
-
-- `phase_authorization`：用户已授权本 Phase 进入单阶段循环
-- 当前阶段验收标准（仅该阶段）
-- Designer 输出（完整）
-- Executor 输出（完整）
-- 指令：只读复核、重跑验收命令、不得修改文件、不得自动修复
-- 检查实现是否遵守 Designer 推荐方案、是否覆盖影响面、是否违背全局约束
-
-必须输出 YAML：
-
-```yaml
-review_id: <campaign>-phase-N[-retry-k]
-review_subject: <阶段说明>
-verdict: PASS | FAIL
-checks:
-  - name: <check>
-    status: pass | fail | skipped
-    output: "<证据>"
-issues: []
-fix_instructions: []
-residual_risks: []
-```
-
-Reviewer 返回的 `residual_risks` 与 `issues` 同样必须逐条 `capture`；`verdict: FAIL` 时把归因写进
-`capture --text`，使「这一轮为什么没过」在栈里可查，而不是只存在于本次对话。
+字段契约（必须输入清单 + 必须输出的 Reviewer YAML 七字段，原样）见 `references/role-contract.md` §2「Reviewer（Step 2）」——唯一真源，本 Skill 不重复定义。
 
 ## 推进栈接线（work-queue-stack）
 
-本循环产生的每一个**阶段范围外的新问题**都必须落进推进栈——但**单阶段编排只接线、不创建栈**：
+接线规则（通用接线动作表、`verify` 门禁与 `retro` 语义、栈帧与 Phase 的对应关系）的唯一真源是 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」，本 Skill 不重复定义。栈脚本 `S=<skill 根>/work-queue-stack/scripts/stack.py`（`<skill 根>` = 装着所有 skill 的那一层：仓库 `skills/`、全局 `~/.codex/skills/`、项目 `.agents/skills/`），`--campaign` 用当前活动标识。
 
-- 栈**已存在**（用户主动声明需要任务栈，或用户批准了 `propose` 申请卡）→ 按下表**接线**：
-  `capture` 衍生、`pop` 关帧、`verify` 门禁。
-- 栈**不存在** → **不得**运行 `ensure`，也不得用首次 `push` 把栈创建出来。改为把新问题写进
-  Executor 的 `remaining_risks` 与 Reviewer 的 `issues`/`residual_risks`，并在交付摘要中逐条列出；
-  若判断确有跨会话丢失风险，按 `work-queue-stack/references/activation-and-recovery.md` 的六维信号评估后
-  运行 `propose` 打印申请卡，**由用户批准**才启用（`ensure` 对新建栈强制要求非 legacy 的 `--activation`，
-  绕过不了）。
+本身份（单阶段编排）覆盖项——强度不低于真源，逐条就地可读：
 
-「启用」与「接线」是两件事：启用**只由用户声明或批准**（见 `work-queue-stack` 的「启用与恢复路由」），
-接线只看栈是否存在。栈脚本 `S=<skill 根>/work-queue-stack/scripts/stack.py`
-（`<skill 根>` = 装着所有 skill 的那一层：仓库 `skills/`、全局 `~/.codex/skills/`、项目 `.agents/skills/`），
-`--campaign` 用当前活动标识；栈绑总目标（campaign），跨阶段跨窗口续用同一个，不另起。
+- **只接线不创建**：栈存在才 `capture` / `pop` / `verify`；不存在**不得** `ensure`、也不得用首次 `push` 建栈，改为写进 Executor 的 `remaining_risks` 与 Reviewer 的 `issues` / `residual_risks`，并按真源评估后 `propose` 打印申请卡，**由用户批准**才启用。「启用」与「接线」是两件事：启用**只由用户声明或批准**，接线只看栈是否存在。
+- **`verify` fail-closed 门禁在 PASS 前**：`verify` 必须 `exit 0`，否则不得写 `progress_tracker`、不得进入下一阶段。
+- **一个 Phase 一帧**；Phase 内的返工重试**不另立子帧**（retry 计数真源是 `progress_tracker`）。
+- **范围外的新问题** `push --parent <Phase 帧>` 成子帧；范围内的实现偏差走 FAIL 分流规则 1，由 Executor 在当前 Phase 内修掉。
+- **收工 `retro`**：原样转达「放弃的方案」「明确搁置」「用户方向切换」三段，不得改写成一句概述。
+- 栈绑总目标（campaign），跨阶段跨窗口续用同一个，不另起。
 
-| 时点 | 机械动作 | 强度 |
-| --- | --- | --- |
-| Executor 返回 `remaining_risks` | 逐条 `capture --found-in <Phase 帧> --disposition blocks\|spawns\|note` | 必须 |
-| Reviewer 返回 `residual_risks` / `issues` | 逐条 `capture`；FAIL 归因写进 `--text` | 必须 |
-| 达到 `max_retries` 转 blocked | `capture` → `pop --terminal escalated`，并在 `docs/operations/issues.md` 立项 | 必须 |
-| **PASS 推进前** | **`verify` 必须 `exit 0`**，否则不得写 `progress_tracker`、不得进入下一阶段 | **fail-closed 门禁** |
-| PASS 推进时 | `pop` 当前 Phase 帧，`--note` 写 Reviewer 结论与证据路径 | 必须 |
-| 帧的标题/判据写错、或验收口径变了 | `amend --frame <未关闭帧>`（改动自动留痕 `event_log`）；**终态帧不可改写**，要纠正就新压一帧说明返工 | 必须 |
-| 全部 Phase 收工 / 计划中止 / 交付前 | `retro`（只读）→ 原样转达「放弃的方案」「明确搁置」「用户方向切换」三段 | 必须 |
-| **任何时点** | **不得 `ensure` / 首次 `push` 创建栈**（只接线不创建；确有需要走 `propose` 申请，用户批准才建） | **禁止** |
+三角色字段契约（必须输入 / 必须输出）的唯一真源是 `references/role-contract.md` §2，本 Skill 不重复定义；`guided-goal-orchestrator` 只**覆盖**「设计缺口分流」一项，覆盖表与理由就地写在 `guided-goal-orchestrator/SKILL.md`。
 
-`verify` 失败意味着存在未处置的衍生登记（`pending`），或 `blocks`/`spawns` 未落到某个帧或指针。
-这是**门禁而不是提醒**：先 `resolve` 干净再推进；不得跳过 `verify` 绕过。
+FAIL 四类分流规则的语义在 `references/role-contract.md` §3，本 Skill 不重复定义。
 
-`retro` 同理不是可选项：收工报告只讲「完成 N 个 Phase」会丢掉最贵的信息——哪些方案被放弃、
-哪些被搁置、用户中途改了几次道。这三段来自只追加的 `event_log`，**推进时没留痕就复盘不出来**，
-所以每一次改道与放弃都必须在发生的当时落进栈（`activate` / `pop --terminal wontfix|parked` + `--note`），
-不允许事后补记。
-
-### 栈帧与 Phase 的对应关系（避免栈被噪音淹没）
-
-- **一个 Phase 一帧**：`push --title "Phase N <阶段名>" --criteria <该阶段验收标准>`。
-- Phase 内的**返工重试不另立子帧**——retry 计数的真源是 `progress_tracker`，重复登记只会制造两份状态。
-- 只有**阶段范围外的新问题**才 `push --parent <Phase 帧>` 成子帧；范围内的实现偏差走 FAIL 分流规则 1，
-  由 Executor 在当前 Phase 内修掉。
-- 判定「范围内/范围外」的依据是 `execution_plan` 的当前阶段章节与 `global_constraints`；
-  拿不准时按**范围外**处理（先登记，宁可多登不可漏登）。
-
-### 本 Skill 是三角色字段契约的真源
-
-Designer / Executor / Reviewer 的**输入输出字段定义以本 Skill 为准**。
-`guided-goal-orchestrator` 在受控模式下复用这些字段契约，只**覆盖** FAIL 分流策略
-（因其阶段方案是用户批准的不可变快照，设计缺口必须停止回计划模式，不得由 Designer 自行重设计）。
-两处若出现字段定义冲突，以本 Skill 为准，并修正受控编排侧的引用。
-
-## FAIL 分流规则（核心）
-
-Reviewer 为 `FAIL` 时，主代理按类型分流：
-
-1. **实现偏差 / 修复可直接编码**
-   - 现象：校验缺口、边界 case 漏测、逻辑遗漏、配置约束未落实、回归 bug
-   - 动作：`retry + 1`，调用 **executor**，并传入 `fix_instructions`
-
-2. **设计缺口 / 方案不成立 / 影响面遗漏**
-   - 现象：当前方案本身矛盾、边界定义错误、全局约束冲突、需重选技术路径
-   - 动作：返回 **designer** 重新设计（带上 reviewer 问题）
-
-3. **证据缺失（代码基本通过但验收证据不全）**
-   - 现象：自动化通过，但缺 staging 手工验收、缺运行记录、缺外部依赖验证证据
-   - 动作：调用 **executor** 执行“验收取证任务”（可不改代码），补齐证据后再 reviewer
-
-4. **达到最大重试**
-   - 条件：`retry >= max_retries`
-   - 动作：停止循环，向用户报告阻塞项与建议
-   - 栈动作：`capture` 后 `pop --terminal escalated --pointers '{"issues":["ISS-0xx"]}'`，
-     并在 `docs/operations/issues.md` 立项。**阻塞项不得只留在对话里**——对话会被压缩、换模型或跨天丢弃。
-
-### 失败后的通俗解释
-
-Reviewer `FAIL`、阶段 `blocked`、达到 `max_retries`，或不可恢复的验收命令失败后，调用 `explain-task-failure` 生成面向用户的说明，再决定是否进入下一轮。该说明必须包含失败原因、已通过/未通过部分、影响范围、术语翻译和一个对应的日常例子；不得替代 Reviewer YAML、改变 retry 计数或把 FAIL 改写成 PASS。
-
-若仍可重试，先给用户展示简短解释，再把 Reviewer 的技术 `fix_instructions` 传给 Executor；若达到最大重试或 blocked，则停止自动推进，并把解释中的 blocker、证据和下一步交还用户。
+失败后的通俗解释（`explain-task-failure` 的调用义务与禁止事项）在 `references/role-contract.md` §3「失败后的通俗解释」，本 Skill 不重复定义。
 
 ## PASS 推进规则
 

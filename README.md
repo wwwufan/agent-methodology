@@ -10,18 +10,20 @@
 
 完整参数以各脚本 `--help` 为准（本 README 刻意不复制参数表，避免出现第二真源）。
 
+> **占位符约定**：`<方法论仓库>` = agent-methodology 仓库根目录（装着 skills/、scripts/、templates/ 的那一层）；未克隆仓库时如何取得这些脚本见 docs/migration-diamond-agent.md（Phase 4a 补用户指引）。
+
 ```bash
 # 1) 把本仓库 skills/ 下的全部方法论 skill 软链到 Codex 个人根（<codex_home>/skills）
-python3 <本仓库>/scripts/install.py
+python3 <方法论仓库>/scripts/install.py
 
 # 2) 只做漂移检测，零副作用（连目标根都不会创建）；安装健康与否以它和 doctor 为准
-python3 <本仓库>/scripts/install.py --check
+python3 <方法论仓库>/scripts/install.py --check
 
 # 3) 给一个新项目铺好项目侧前提：三角色配置 + Codex 围栏注册 + 长期池文档 + workstacks/
-python3 <本仓库>/scripts/bootstrap_project.py <PROJECT>
+python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT>
 
-# 4) 只读自检 11 项，是"安装健康"的唯一判据（warn 不影响退出码）
-python3 <本仓库>/scripts/doctor.py --project <PROJECT>
+# 4) 只读自检（12 组 + 1 opt-in 组；行数随参数变化，以 --json summary.total 为准），是"安装健康"的唯一判据（warn 不影响退出码）
+python3 <方法论仓库>/scripts/doctor.py --project <PROJECT>
 ```
 
 > **写盘事务性**：`bootstrap_project.py` 是「全或无」的——任一文件写失败、或围栏写入后复检不过，本次运行已写的文件
@@ -34,14 +36,14 @@ python3 <本仓库>/scripts/doctor.py --project <PROJECT>
 项目侧改软链（把既有实体目录换成指向本仓库的软链）用同一条 `install.py`：
 
 ```bash
-python3 <本仓库>/scripts/install.py --project-link <PROJECT> --dry-run
+python3 <方法论仓库>/scripts/install.py --project-link <PROJECT> --dry-run
 ```
 
 ## 目录约定
 
 | 路径 | 内容 |
 | --- | --- |
-| `skills/` | **唯一真源**。每个子目录是一个 skill（`SKILL.md` + 可选 `scripts/`、`references/`、`agents/`）。目录名必须等于 `SKILL.md` frontmatter 里的 `name`——脚本按此扫描，不硬编码 skill 名 |
+| `skills/` | **唯一真源**。每个子目录是一个 skill（`SKILL.md` + 可选 `scripts/`、`references/`、`agents/`）。目录名必须等于 `SKILL.md` frontmatter 里的 `name`——脚本按此扫描，不硬编码 skill 名。例外：`doctor.py` 持有本包规范 5 skill 名单（`CANONICAL_SKILLS`）仅用于齐全性判据；挂载/扫描逻辑仍按磁盘驱动 |
 | `scripts/` | 仓库级工具：`install.py`（挂载/漂移检测/卸载）、`bootstrap_project.py`（新项目 onboarding）、`doctor.py`（只读自检）、`_common.py`（三者共用的真源解析，禁止在脚本内各自复制一份） |
 | `templates/` | `bootstrap_project.py` 的载荷：`codex-agents/`、`cursor-agents/`、`codex-config.fragment.toml`、`docs-operations/`、`workstacks/` |
 | `docs/` | 稳定文档：`discovery-probe.md`（skill 发现机制的探针结论与证据边界）、`migration-diamond-agent.md`（从 diamond-agent 迁出的过程真源，含暂存期不一致清单与口径注记） |
