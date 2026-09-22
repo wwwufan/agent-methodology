@@ -1,0 +1,7 @@
+interface:
+  display_name: "任务失败通俗解释"
+  short_description: "把失败原因、术语和影响讲成易懂中文，并给出下一步和日常例子"
+  default_prompt: "使用 $explain-task-failure 分析这次任务失败，并用通俗例子解释发生了什么。"
+
+policy:
+  allow_implicit_invocation: true

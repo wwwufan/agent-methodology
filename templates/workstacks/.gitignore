@@ -1,0 +1,8 @@
+# 迁移备份与周期快照不入库：栈本体已纳入 Git，版本历史由 Git 提供；
+# history/ 里的 .bak 只是栈还住在 gitignored 的 scratch/ 那个年代的保险，
+# 入库只会让每次 diff 多出两大坨无信息量的内容。
+*/history/
+# 单栈指针不入库：每次切换都会脏 Git，多窗口还会互相覆盖；
+# 克隆后没有指针是正常的 —— 按 work-queue-stack 的恢复规则重新做语义识别，或由用户指定。
+_current.json
+_current.json.tmp

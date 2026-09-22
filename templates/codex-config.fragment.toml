@@ -1,0 +1,11 @@
+[agents.designer]
+description = "只读分析根因、调用链、影响面和设计方案；仅在用户显式点名或阶段编排已授权时使用。"
+config_file = "agents/designer.toml"
+
+[agents.executor]
+description = "按已确认方案实施并验证范围明确的改动；仅在用户显式点名或阶段编排已授权时使用。"
+config_file = "agents/executor.toml"
+
+[agents.reviewer]
+description = "只读复核阶段成果并输出 PASS/FAIL 与修复指令；仅在用户显式点名或阶段编排已授权时使用。"
+config_file = "agents/reviewer.toml"

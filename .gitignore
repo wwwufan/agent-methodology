@@ -1,0 +1,9 @@
+# Python 字节码缓存：由解释器自动生成、可从源码重建，入库只会让每次 diff 多出二进制噪音。
+# 更关键的是 .pyc 里会烙进生成本机绝对路径（实测 multi-phase-plan-orchestrator 的
+# check_codex_backend.cpython-312.pyc 就含 /Users/…/diamond-agent/… 路径），
+# 带进仓库既泄漏本机布局又不可移植 —— promote 后首个提交不得含任何缓存。
+__pycache__/
+# 同上，覆盖散落在 __pycache__ 之外的字节码文件（.pyc/.pyo/.pyd）。
+*.py[cod]
+# macOS 文件浏览器自动生成的垃圾文件，与仓库内容无关；promote 后首个提交不得含它。
+.DS_Store

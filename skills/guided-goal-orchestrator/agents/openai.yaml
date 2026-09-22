@@ -1,0 +1,7 @@
+interface:
+  display_name: "受控目标编排"
+  short_description: "由用户掌握路线与阶段门禁，在单阶段目标内自动完成三角色闭环"
+  default_prompt: "使用 $guided-goal-orchestrator 将我的总目标拆成由我批准路线和阶段、每阶段独立运行的受控目标流程。"
+
+policy:
+  allow_implicit_invocation: false

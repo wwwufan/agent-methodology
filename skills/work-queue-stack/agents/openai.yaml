@@ -1,0 +1,13 @@
+interface:
+  display_name: "栈式工作队列"
+  short_description: "把待办与衍生问题外化成栈，并负责栈的启用申请与跨窗口恢复"
+  default_prompt: "使用 $work-queue-stack 把本轮待办压成工作栈；推进中衍生新问题先登记再决定，每关闭一帧都回看还剩什么、下一步做什么。"
+
+policy:
+  # 与 guided-goal-orchestrator 相反：那个会启动 Goal 与阶段门禁，必须用户显式点名。
+  # 本 skill 的 survey / show / stacks / propose / verify / retro 都是只读的，隐式触发没有副作用；
+  # 而「会话被压缩 / 换模型 / 跨天回来」这些恢复场景恰恰需要它自动生效——
+  # 那时模型已经忘了要显式点名，靠隐式触发才接得回状态。
+  # 安全性不靠调用策略保证，而靠「未获用户声明或批准不得 ensure 建栈」这条硬规则
+  # （脚本对新建栈强制要求 --activation，缺省或 legacy 值一律 exit 2 且不落文件）。
+  allow_implicit_invocation: true
