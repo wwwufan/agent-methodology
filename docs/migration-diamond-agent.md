@@ -153,14 +153,14 @@ Phase 1 口径 32/21 为历史基线；Phase 3 后现状 = **33 文件 / 22 目�
 
 ### Phase 4a / 4b
 
-11. **G2**：确认仓库最终路径与名字。Phase 1 已规避硬编码 —— 脚本一律用
-    `Path(__file__).resolve().parents[1]` 推导仓库根，文档里出现路径处写「本仓库」；
-    但 `bootstrap_project.py` 写的围栏注释里有一行 `agent-methodology/scripts/bootstrap_project.py`，
-    若最终仓库改名，这一行需要同步。
-12. **G3**：等价性回归双采比对（`stack.py` 行为不变）必须在替换项目内实体副本**之前**执行。
-13. **4b 硬前置**：`explain-task-failure/` 在 diamond-agent 里**未纳入 Git**（实测 `??`），
-    用软链替换实体目录前必须先提交它、或确认备份目录里有它，否则那 2 个文件将只剩暂存区一份副本。
-    这条风险也写在 `install.py` 的 `conflict(real)` **输出**里，不是只写在文档里。
+11. ✅ **已确认（G2 · 2026-09-21）** · 仓库最终路径与名字 = `~/client/agent-methodology`（独立 Git 仓库，首提交 `3be3060`）。
+    `bootstrap_project.py` 的围栏注释行实测为 `# 本区块由 agent-methodology/scripts/bootstrap_project.py 管理。`（`:64`），
+    与最终仓库名一致，**无需同步**；`FENCE_OPEN/CLOSE`（`:61-62`）亦已用该名。
+12. ✅ **已执行（4a · 2026-09-22 PASS，用户 G3 确认 2026-09-24）** · 等价性回归在替换项目内实体副本**之前**完成：
+    OLD 锚 `agent-methodology@3be3060` vs NEW `@17090b5`，5 个只读入口归一化后 `diff = 0`，Reviewer 18/18/0/0。
+13. ✅ **已解除（G4 + 4a 追加验收 (i)(ii)(iii)）** · `explain-task-failure/` 未纳入 diamond-agent Git 的处置：
+    不提交进项目 Git，改为备份到 `~/client/agent-methodology-backup/explain-task-failure-20260921/`（`cp -Rp` + 逐文件 shasum 2/2 OK），
+    且两文件已入真源 Git（hash `8eb390d4…` / `ff4c30f0…` 逐字节吻合）；`install.py` 的 `conflict(real)` 输出里的这条风险提示保持有效。
 
 ### 互指注释留痕（§doctor 第 6 组与 `check_codex_backend.py` 的接缝）
 
@@ -458,3 +458,94 @@ Phase 1 口径的 32 文件 / 21 目录是**历史基线**（见 ④）。Phase 
    本节的说明文字自身计入，并随文档改写而漂移（自指陷阱）。可机械核验且稳定的形态是把范围限定到
    `README.md`：该文件内不得再出现以「序数 + 项」指代 doctor 自检规模的连写形态（旧措辞已按 ⑦.2
    改写为「12 组 + 1 opt-in 组」），本批实测 `grep -c` = **0**。
+
+---
+
+## ⑧ Phase 4a / 4b 收口增量（2026-09-24）
+
+> 与 ⑥/⑦ 同理，本节只放**跨阶段仍然成立的结论**；过程记录与四栏原文在项目侧
+> `scratch/workbench/methodology-skills-extraction/`（`progress.md` 执行留痕、`phase4b-executor-report.md`）。
+
+### ⑧.1 两端同源达成
+
+- 全局挂载（`~/.codex/skills/<name>` 5 条）与项目侧（diamond-agent `.agents/skills/<name>` 5 条）全部为指向
+  `agent-methodology/skills/<name>` 的软链，实体副本 = **0**；`.cursor/skills` 仍为二级软链（`../.agents/skills`），
+  5 个入口逐一可穿透解析到真源（`SKILL.md` 全可读）。
+- 替换前的 5 个项目内实体目录（15 文件）已完整备份到
+  `~/client/agent-methodology-backup/diamond-agent-project-skills-4b/`，相对路径口径逐文件 shasum 与替换前冻结清单
+  **逐行相同**（含那个游离 `.pyc`，它是 P2-N4/R28 的现成物证；`install.py` 的破坏性替换按约定生成）。
+- 依据：Phase 4b 判据 V1 / V1b / V3 / V10（四栏原文由 Executor 与 Reviewer 双侧独立重跑）。
+
+### ⑧.2 doctor 项数的 4b 口径（三变量表；数字复用禁令）
+
+| 口径 | 三变量（`--project` 有无 / `--no-global` 有无 / 目标布局） | `status` | `summary` | `exit` |
+| --- | --- | --- | --- | --- |
+| A | 无 `--project` + 带全局 + live 真源仓库 | `ok` | `total=19, error=0, warn=0, ok=19` | 0 |
+| B | `--project <diamond-agent>` + `--no-global` + live 真源仓库 | `ok` | `total=27, error=0, warn=0, ok=27` | 0 |
+| C | `--project <diamond-agent>` + 带全局 + live 真源仓库 | `ok` | `total=31, error=0, warn=0, ok=31` | 0 |
+| D | `--no-global` + 无 `--project` + live 真源仓库 | `ok` | `total=15, error=0, warn=0, ok=15` | 0 |
+
+- 闭合算式：`31 = 30 − 5 + 1 + 5` —— 4b 前口径 C 实测 `total=30 / error=5 / exit=1`；4b 后
+  `7.<skill>` 5 条由 fail 转 ok（行数不变，第 7 组恒 6 行 = 5 skill + `cursor-skills`），
+  另第 8 组新增 `8.config`（ok，`workstacks/config.json` 存在且全部取默认值）1 行；`27 = 26 + 1` 同理。
+- **与 ⑦.2 不得互相代入**：⑦.2 的 `15 / 26` 绑定的是 **`mktemp -d` 假项目 + `bootstrap_project.py` 构造**，
+  本表绑定的是 **live diamond-agent + live 真源仓库**构造；数值巧合 ≠ 同一判据（41-5 / P3-10）。
+
+### ⑧.3 `stack.py` 的唯一用户可感知输出差
+
+- `survey` 第 109 行内嵌脚本自身路径（`Path(__file__).resolve()`，真源 `stack.py:1608`，全脚本唯一
+  `__file__` 用法）。4b 后项目侧入口经软链解析到真源路径，该行比旧实体脚本时代短 4 B：
+  算式 `12189 − 12185 = 4 = 81 − 77`（路径长度差 × 出现次数 1）。
+- 其余 4 个只读入口（`stacks` / `show` / `verify` / `retro`）输出**逐字节不变**
+  （armB(pre) vs armP(post) `diff = 0` 行 × 4；等价性回归在替换前已完成并经用户 G3 确认，2026-09-24）。
+- 另两项行为放宽（仓库根发现标记集 1→4、die 文案 1→2 行）只在非 `.git` 目录 / 失败路径显现，同批获用户确认。
+
+### ⑧.4 不变量：真源仓库路径不得变更
+
+- **真源仓库路径 `/Users/bole/client/agent-methodology` 不得移动、改名或删除**：10 条绝对路径软链
+  （全局 5 + 项目侧 5）依赖它；断链后项目侧与全局侧的方法论 skill 同时不可见。
+- 检测手段：`<方法论仓库>/scripts/install.py --check`（报 `drift`）与 `<方法论仓库>/scripts/doctor.py`
+  第 4/7 组（报 `fail`）。
+- 破坏性替换的备份目录约定 = `~/client/agent-methodology-backup/`：**不得落 `/tmp`**
+  （2026-09-21 19:44 有被外部清理前科）、**不得落 `scratch/`**（项目侧可重建可丢弃区，同日误删事件的靶区）。
+
+### ⑧.5 P2-N6 结案：`survey` 原始字节数是输入侧移动靶
+
+- 机制结论（4b V12 实测）：`survey` 原始字节数 = f(**在飞栈正文**, **长期池条数**, **路径回显**) 的三变量移动靶。
+  路径回显实测含**两类**：第 109 行的脚本自身路径（`Path(__file__).resolve()`）与第 79/83 行的【工作计划】/【问题清单】
+  仓库根绝对路径回显 —— 后者是 4b 实测对设计前提「`survey` 输出不含仓库根路径」的**更正**（V12 申报件 DR-14）。
+  「不以历史字节数为期望值」自 4a 起已制度化，此处维持并给出机制级证据。
+- 机制级归因实验（夹具在独立目录 `/tmp/p4b-p2n6/live`，不触碰真实项目；真实 `docs/operations/` 双哈希前后同值）：
+  ① **夹具完备性**：完整夹具（`workstacks/` + `docs/operations/` 副本）与 live 输出的 `diff` **恰 2 行**
+  （`:79`/`:83` 两条仓库根路径回显行），全部内容行逐字节相同；字节差 `12157 − 12185 = −28 = 2 × (18 − 32)`
+  （夹具根路径长度 − 项目根路径长度，出现次数 2）→ 夹具在**内容面**完备，路径回显是唯一偏差变量。
+  ② **单变量扰动**：夹具 `issues.md` 末尾加 1 行 ISS 表格行（97 B）→ 输出 Δ = **+56 B** =
+  新增 2 条渲染行（类别行 `  验收/证据（1 条）` 27 B + 条目行 `    ISS-900  open         P2` 29 B）
+  + `未解决 17 条` → `18 条`（字节差 0）；插入的表格行**不被逐字回显**，而是被渲染为展示格式
+  → 「长期池条数」变量被机械证明（设计预期的「Δ 恰等于插入行字节数」被实测更正，同属 DR-14）。
+  ③ **不可复现性**：`workstacks/<campaign>/history/` 只有 2026-09-18 / 09-20 两个 `.bak`，Git HEAD 态
+  夹具实测 `11081 B`；Phase 2 时点的中间态既未提交也无快照 → `12189 − 12114 = 75`（Phase 2 时点 vs
+  4b 时点）归因到**类别**（输入侧漂移）成立，归因到**字段**机械不可达。
+- 处置：**不往项目 `docs/operations/issues.md` 立项**。三条理由：① 会改 doctor `9.pool` 的文本
+  （`issues.md 17 条` → `18 条`），给健康判据凭空加一个变量；② 该文件是**另一 campaign 的长期池真源**，
+  注入方法论条目会污染 `survey` 菜单语义；③ ISS id 有并发撞号风险（现存最大 `ISS-023`，在飞栈正文已出现 `ISS-024`）。
+
+### ⑧.6 4b 新登记 3 条（登记不顺手改）
+
+1. **P4B-N1**：`install.py:333` 的可写性守卫未排除 `--mode check` → `--check`（自称零副作用）在只读目标根下
+   `exit=2`（stdout 恰 1 行 `[FAIL] 目标根不可写：…`），与其 docstring「强制零副作用」矛盾。
+   建议 1 行修复：守卫条件加 `and mode != "check"`。**4b 不做**（Q4 裁决；避免牵动等价性面）。
+2. **P4B-N2**：diamond-agent 的 `tests/core/agent/test_orchestration_backend.py:12` 硬编码旧 backend 脚本路径
+   （`.agents/skills/multi-phase-plan-orchestrator/scripts/`），4b 后该路径悬空，3 个 test 会在 `exec_module` 处
+   `FileNotFoundError`。该文件未入 Git、CI 干净检出不可见，属他人未提交 WIP，**4b 不修**（Q3 裁决）。1 行补丁文本（登记用）：
+
+   ```python
+   # tests/core/agent/test_orchestration_backend.py:12
+   -    / ".agents/skills/multi-phase-plan-orchestrator/scripts/check_codex_backend.py"
+   +    / ".agents/skills/single-phase-execution-loop/scripts/check_codex_backend.py"
+   ```
+
+   API 兼容性已核：真源版保留 `RoleConfig.sandbox_mode`、`load_role_configs(repo_root)`、
+   `validate_backend(*, role_configs, active_model, available_models)` 与两条错误文案字面量，新增项全是 additive。
+3. **P4B-N3**：`bootstrap_project.py:435` 的 `--force` 备份目录约定默认落 `<TMP>/agent-methodology-backup/<ts>/`，
+   与 ⑧.4 的「备份不得落 /tmp」约定同族（P2-N12），未排期。
