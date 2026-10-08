@@ -1,0 +1,4 @@
+interface:
+  display_name: "证据驱动探索循环"
+  short_description: "通过最小区分实验解决技术未知，并返回可执行路径与停止条件"
+  default_prompt: "使用 $exploration-loop 对当前技术未知建立假设、运行最小实验并形成退出决策。"

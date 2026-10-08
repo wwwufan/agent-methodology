@@ -97,8 +97,9 @@ campaign 的弯路而不是单轮。文中「一轮」指**你一次连续推进
 「选下一件事」与「把选定的事推到底」都在本 Skill 内：`survey` 负责选（读长期池给菜单），
 栈负责推（`push` → `pop` 不丢帧）。原 `next-work-plan` skill 的职责已被 `survey` 吸收并删除，
 但它读取的两个长期真源文档**原样保留**——`survey` 只抽索引，不把正文搬进栈。
-阶段内 Designer → Executor → Reviewer 仍走 `single-phase-execution-loop`。本 Skill 不介入角色委托，
-也不代替用户做阶段批准或跨阶段推进决策。
+阶段内 Designer → Executor → Reviewer 仍走 `single-phase-execution-loop`。当前帧因可行性、未知根因或
+候选技术路线缺少证据而无法可靠继续时，以 `exploration-loop` 作为该帧或阻塞子帧的临时执行协议。
+本 Skill 只保存推进状态与指针，不介入角色委托，也不代替用户做阶段批准或跨阶段推进决策。
 
 ## 命令
 
@@ -213,6 +214,20 @@ Schema、状态机、不变量清单与排错见 [references/stack-schema.md](re
 
 拿不准就先用默认 `pending` 登记，但 **`pending` 会让 `verify` 失败**，收工前必须 `resolve`。
 **禁止未登记就顺手展开一个新问题**——这正是「推进第一个问题时被带走」的成因；只有 `blocks` 允许打断当前帧。
+
+#### 认知型阻塞的帧级路由
+
+任务栈是状态容器，不把 campaign 全局标记为「探索项目」。每次阻塞按当前帧分流：
+
+| 当前情况 | 执行协议 | 栈动作 |
+| --- | --- | --- |
+| 方案明确，只是实现偏差 | 普通执行或 `single-phase-execution-loop` | 留在当前帧 |
+| 可行性、根因或技术路线缺证据 | `exploration-loop` | `capture blocks` → 探索子帧 `--activate` |
+| 需要成本、风险或“够好”的判断 | 用户决策 | 保留当前帧与选项，不以实验代替价值判断 |
+| 缺权限、数据或外部系统 | blocked / escalated | 登记阻塞证据与恢复条件 |
+
+探索子帧只回答一个知识问题；关闭后由栈自动恢复父执行帧。
+探索循环不构成新建栈或扩大原任务授权的理由；没有栈时仍按本 Skill 的启用规则走 `propose`。
 
 ### 3. 收工时 · pop 自动回看四段
 

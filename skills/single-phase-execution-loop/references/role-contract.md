@@ -99,7 +99,14 @@ Reviewer 为 `FAIL` 时，主代理按类型分流：
    - 现象：自动化通过，但缺 staging 手工验收、缺运行记录、缺外部依赖验证证据
    - 动作：调用 **executor** 执行“验收取证任务”（可不改代码），补齐证据后再 reviewer
 
-4. **达到最大重试**
+4. **认知缺口 / 未知根因 / 需实测选路**
+   - 现象：继续修复或重设计只能猜测；同时存在多个可能根因；可行性或技术路线必须通过实验区分
+   - 动作：暂停原重试路线，调用 `exploration-loop` 运行“假设 → 最小区分实验 → 证据 → 决策”；探索本身不增加 Executor `retry`
+   - 栈动作：已有栈时 `capture --disposition blocks`，建探索子帧并激活；没有栈时不因探索自动创建
+   - 返回：证据指向实现偏差 → Executor；推翻设计 → Designer；需价值、成本或风险取舍 → 用户；预算耗尽仍无结论 → `parked` / blocked
+   - 受控目标模式下，探索结论若要求改动已批准快照，仍必须停止并回计划模式，不得由 Designer 自行改写
+
+5. **达到最大重试**
    - 条件：`retry >= max_retries`
    - 动作：停止循环，向用户报告阻塞项与建议
    - 栈动作：`capture` 后 `pop --terminal escalated --pointers '{"issues":["ISS-0xx"]}'`，

@@ -133,7 +133,7 @@ phase_authorization: 当前 Phase 已获阶段级授权，主代理只负责编�
 阻塞项与阶段范围外的问题还必须落进推进栈：`capture` 后按 `blocks`/`spawns`/`note` 处置，
 跨轮次缺陷 `pop --terminal escalated` 并在 `docs/operations/issues.md` 立项。
 **不得让阻塞只存在于对话里**——对话会被压缩、换模型或跨天丢弃。
-接线细节以 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」为准，三角色字段契约与 FAIL 四类分流以 `single-phase-execution-loop/references/role-contract.md` 为准，本 Skill 不重复定义。
+接线细节以 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」为准，三角色字段契约与 FAIL 五类分流以 `single-phase-execution-loop/references/role-contract.md` 为准，本 Skill 不重复定义。
 
 最后一个 Phase PASS、或整个计划被中止时，收尾报告必须附 `stack.py retro` 的
 「放弃的方案 / 明确搁置 / 用户方向切换」三段——多阶段计划跨越数天，

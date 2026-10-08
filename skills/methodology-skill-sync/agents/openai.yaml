@@ -1,0 +1,4 @@
+interface:
+  display_name: "方法论 Skill 同步"
+  short_description: "把 agent-methodology 中的技能安全同步到已登记项目"
+  default_prompt: "使用 $methodology-skill-sync 检查并同步所有已登记项目的方法论技能软链。"

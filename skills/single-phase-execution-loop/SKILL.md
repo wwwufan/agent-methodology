@@ -1,6 +1,6 @@
 ---
 name: single-phase-execution-loop
-description: 面向单个阶段（单步计划）的执行循环：按 designer → executor → reviewer 推进，并根据 FAIL 类型分流到 executor 重试或 designer 重设计。适用于用户要求“单阶段闭环/门禁复核/失败重试”的场景。
+description: 面向单个阶段（单步计划）的执行循环：按 designer → executor → reviewer 推进，并根据 FAIL 类型分流到 executor 重试、designer 重设计或证据驱动探索。适用于用户要求“单阶段闭环/门禁复核/失败重试”的场景。
 ---
 
 # 单阶段执行循环（Designer/Executor/Reviewer）
@@ -16,7 +16,7 @@ description: 面向单个阶段（单步计划）的执行循环：按 designer 
 
 - 用户明确要求“编排模式”“分阶段推进”“调 designer/executor/reviewer subagent”。
 - 阶段有明确验收标准（自动化命令 + 手工验收项）。
-- 需要 FAIL 后可追踪、可重试、可分流（实现问题 vs 设计问题）。
+- 需要 FAIL 后可追踪、可重试、可分流（实现偏差 vs 设计缺口 vs 认知缺口）。
 
 不适用：一次性小改、无需 reviewer 门禁的简单任务。
 
@@ -107,7 +107,7 @@ Codex collaboration 后端无法强制每个子代理使用独立 sandbox。主�
 
 三角色字段契约（必须输入 / 必须输出）的唯一真源是 `references/role-contract.md` §2，本 Skill 不重复定义；`guided-goal-orchestrator` 只**覆盖**「设计缺口分流」一项，覆盖表与理由就地写在 `guided-goal-orchestrator/SKILL.md`。
 
-FAIL 四类分流规则的语义在 `references/role-contract.md` §3，本 Skill 不重复定义。
+FAIL 五类分流规则的语义在 `references/role-contract.md` §3，本 Skill 不重复定义。
 
 失败后的通俗解释（`explain-task-failure` 的调用义务与禁止事项）在 `references/role-contract.md` §3「失败后的通俗解释」，本 Skill 不重复定义。
 

@@ -73,7 +73,8 @@ JSON_KEYS = ("group", "id", "level", "object", "message", "detail")
 # 第二份清单真源，而是「本包承诺分发哪几个 skill」的显式声明。
 # 为什么必须有它：`iter_skills` 只枚举磁盘实存的 skill，删掉一个 skill 目录时第 1 组只会少一行 ok、
 # 不报任何 fail —— 最该红的信号反而静默通过（实测缺口）。
-CANONICAL_SKILLS = ("explain-task-failure", "guided-goal-orchestrator", "multi-phase-plan-orchestrator",
+CANONICAL_SKILLS = ("explain-task-failure", "exploration-loop", "guided-goal-orchestrator",
+                    "methodology-skill-sync", "multi-phase-plan-orchestrator",
                     "single-phase-execution-loop", "work-queue-stack")
 
 # 第 3 组：同包引用的两种形态（$<slug> 点名 / <slug>/子目录 路径引用）
@@ -211,7 +212,8 @@ def _group2(repo: Path):
         pyc_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         return [_row(2, "fail", str(pyc_dir), f"无法创建 py_compile 输出目录：{exc}", key="pyc-dir")]
-    scripts = sorted((repo / "skills").glob("*/scripts/*.py"))
+    scripts = sorted((repo / "scripts").glob("*.py"))
+    scripts += sorted((repo / "skills").glob("*/scripts/*.py"))
     if not scripts:
         return [_row(2, "ok", "skills/*/scripts/*.py", "没有需要编译的脚本", key="none")]
     for py in scripts:
