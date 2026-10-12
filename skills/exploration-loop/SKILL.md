@@ -12,7 +12,7 @@ description: >-
 
 本 Skill 是当前帧的**临时执行协议**，不是项目级模式。它与任务栈正交：
 
-- `work-queue-stack` 管理任务、分叉、恢复与历史；
+- `campaign-work-stack` 管理任务、分叉、恢复与历史；
 - 本 Skill 管理一个知识问题如何通过实验形成足以决策的证据；
 - `single-phase-execution-loop` 管理方案已足够明确后的设计、实现与评审。
 
@@ -78,7 +78,7 @@ description: >-
 
 - 已有栈：先 `capture --disposition blocks`，再把知识问题压成当前执行帧的探索子帧并激活；父帧 `suspended`，子帧关闭后自动恢复。
 - 没有栈且可单轮收口：可在当前上下文内直接运行循环，不因“探索”自动建栈。
-- 没有栈且出现跨会话、多分叉等 `work-queue-stack` 启用信号：走该 Skill 的 `propose`，只有用户批准后才 `ensure`。
+- 没有栈且出现跨会话、多分叉等 `campaign-work-stack` 启用信号：走该 Skill 的 `propose`，只有用户批准后才 `ensure`。
 
 需要在栈帧中记录探索时，读 [references/frame-protocol.md](references/frame-protocol.md)。
 

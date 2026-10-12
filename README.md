@@ -1,7 +1,7 @@
 # agent-methodology
 
 跨项目复用的**方法论 skill 真源仓库**：把「怎么推进一项复杂工作」的编排方法（分阶段编排、单阶段三角色闭环、
-栈式工作队列、证据驱动探索、跨项目同步、受控目标编排、失败通俗解释）从具体业务项目里迁出来，独立成仓库，由各项目以**软链**方式挂载。
+总目标推进栈、证据驱动探索、跨项目同步、受控目标编排、失败通俗解释）从具体业务项目里迁出来，独立成仓库，由各项目以**软链**方式挂载。
 
 本仓库**不放任何业务内容**：没有业务数据、没有项目专属流程、没有某个游戏的资料库。
 业务 skill 留在各业务项目自己的 `.agents/skills/` 下。
@@ -34,7 +34,7 @@ python3 <方法论仓库>/scripts/sync_projects.py
 > 全部还原，磁盘状态与运行前一致，不留半成品（退出码：复检失败 `1`、`OSError` `2`；FAIL 文案会写明「已回滚 N 个文件」）。
 >
 > **仓库布局可配置**：`stack.py` 会在它所运行的项目仓库根发现 `workstacks/config.json`（键 `workstack_root` / `plan_doc` /
-> `issue_doc`，缺省即当前默认布局）；schema 见 `skills/work-queue-stack/references/stack-schema.md`。该文件不存在时一切走
+> `issue_doc`，缺省即当前默认布局）；schema 见 `skills/campaign-work-stack/references/stack-schema.md`。该文件不存在时一切走
 > 默认值，输出与未引入此特性前逐字一致（diamond-agent 即此情形）。
 
 项目侧改软链（把既有实体目录换成指向本仓库的软链）用同一条 `install.py`：

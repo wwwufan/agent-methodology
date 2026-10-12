@@ -1,7 +1,7 @@
 interface:
-  display_name: "栈式工作队列"
+  display_name: "总目标推进栈"
   short_description: "把待办与衍生问题外化成栈，并负责栈的启用申请与跨窗口恢复"
-  default_prompt: "使用 $work-queue-stack 把本轮待办压成工作栈；推进中衍生新问题先登记再决定，每关闭一帧都回看还剩什么、下一步做什么。"
+  default_prompt: "使用 $campaign-work-stack 为当前总目标维护推进栈；推进中衍生新问题先登记再决定，每关闭一帧都回看还剩什么、下一步做什么。"
 
 policy:
   # 与 guided-goal-orchestrator 相反：那个会启动 Goal 与阶段门禁，必须用户显式点名。

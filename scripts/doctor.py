@@ -75,7 +75,7 @@ JSON_KEYS = ("group", "id", "level", "object", "message", "detail")
 # 不报任何 fail —— 最该红的信号反而静默通过（实测缺口）。
 CANONICAL_SKILLS = ("explain-task-failure", "exploration-loop", "guided-goal-orchestrator",
                     "methodology-skill-sync", "multi-phase-plan-orchestrator",
-                    "single-phase-execution-loop", "work-queue-stack")
+                    "single-phase-execution-loop", "campaign-work-stack")
 
 # 第 3 组：同包引用的两种形态（$<slug> 点名 / <slug>/子目录 路径引用）
 _DOLLAR_REF_RE = re.compile(r"\$([a-z][a-z0-9]*(?:-[a-z0-9]+)+)")
@@ -98,7 +98,7 @@ _ISSUE_ROW_RE = re.compile(r"^\|\s*(ISS-\d+)\s*\|(.*)$")
 # `scratch/workbench/…` 的提及（v3→v4 迁移史的合法叙述，stack.py 的 migrate 命令依赖这套旧路径
 # 语义）；本正则只匹配 `.agents/skills/<slug>/` 前缀，两者命中集合**零交集**（实测）。
 _LEGACY_PREFIX_RE = re.compile(r"\.agents/skills/[A-Za-z0-9_-]+/")
-_STACK_SCRIPT_REL = "skills/work-queue-stack/scripts/stack.py"
+_STACK_SCRIPT_REL = "skills/campaign-work-stack/scripts/stack.py"
 # 第 9 组的 `contract` 项：跨组件契约的内容锚点。四个正则字面量在 stack.py 源码里都写作 r"…"，
 # 故可直接子串匹配；两个解析函数名是 survey 与本组共用的口径来源。
 _STACK_CONTRACT_RE = (_PLAN_ID_RE, _PLAN_STATUS_RE, _PLAN_PRIORITY_RE, _ISSUE_ROW_RE)
@@ -586,8 +586,8 @@ def _layout_config_detail():
             '  {"workstack_root": "workstacks",',
             '   "plan_doc": "docs/operations/next-work-plan.md",',
             '   "issue_doc": "docs/operations/issues.md"}',
-            "真源：skills/work-queue-stack/scripts/stack.py 的 load_layout（schema 见 "
-            "skills/work-queue-stack/references/stack-schema.md）。"]
+            "真源：skills/campaign-work-stack/scripts/stack.py 的 load_layout（schema 见 "
+            "skills/campaign-work-stack/references/stack-schema.md）。"]
 
 
 # ------------------------------------------------------------ 9 长期池可解析

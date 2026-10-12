@@ -11,7 +11,7 @@
 - 两处若出现字段定义冲突，**以本文件为准**，并修正引用侧。
 
 > 注：下文 §2 / §3 是从 `single-phase-execution-loop/SKILL.md` 逐字搬运的原文，其中「见「推进栈接线」」
-> 指的是接线规则的真源 `work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」，
+> 指的是接线规则的真源 `campaign-work-stack/references/activation-and-recovery.md`「各编排身份的接线」，
 > 以及 `single-phase-execution-loop/SKILL.md` 的同名覆盖项小节。
 
 ## §2 三角色字段契约

@@ -92,9 +92,9 @@ Codex collaboration 后端无法强制每个子代理使用独立 sandbox。主�
 
 字段契约（必须输入清单 + 必须输出的 Reviewer YAML 七字段，原样）见 `references/role-contract.md` §2「Reviewer（Step 2）」——唯一真源，本 Skill 不重复定义。
 
-## 推进栈接线（work-queue-stack）
+## 推进栈接线（campaign-work-stack）
 
-接线规则（通用接线动作表、`verify` 门禁与 `retro` 语义、栈帧与 Phase 的对应关系）的唯一真源是 `<skill 根>/work-queue-stack/references/activation-and-recovery.md`「各编排身份的接线」，本 Skill 不重复定义。栈脚本 `S=<skill 根>/work-queue-stack/scripts/stack.py`（`<skill 根>` = 装着所有 skill 的那一层：仓库 `skills/`、全局 `~/.codex/skills/`、项目 `.agents/skills/`），`--campaign` 用当前活动标识。
+接线规则（通用接线动作表、`verify` 门禁与 `retro` 语义、栈帧与 Phase 的对应关系）的唯一真源是 `<skill 根>/campaign-work-stack/references/activation-and-recovery.md`「各编排身份的接线」，本 Skill 不重复定义。栈脚本 `S=<skill 根>/campaign-work-stack/scripts/stack.py`（`<skill 根>` = 装着所有 skill 的那一层：仓库 `skills/`、全局 `~/.codex/skills/`、项目 `.agents/skills/`），`--campaign` 用当前活动标识。
 
 本身份（单阶段编排）覆盖项——强度不低于真源，逐条就地可读：
 

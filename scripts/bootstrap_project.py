@@ -12,7 +12,7 @@
     --backend both    → 上述两组（默认）
     与 backend 无关、除 --skip-operations 外总是铺：
         workstacks/.gitignore、docs/operations/{next-work-plan,issues}.md
-    （这三者是 work-queue-stack skill 的**项目侧前提**，不属任何编排后端，故不受 --backend 门控。）
+    （这三者是 campaign-work-stack skill 的**项目侧前提**，不属任何编排后端，故不受 --backend 门控。）
 
 明确不做（越界即错）：
     不创建 workstacks/<campaign>/、不创建 active-work-stack.json、不运行 stack.py ensure

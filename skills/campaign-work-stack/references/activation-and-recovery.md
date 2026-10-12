@@ -72,7 +72,7 @@ workstacks/                        ← 项目内、纳入 Git
 ### 申请卡（`propose`，只读）
 
 ```bash
-S=<本 skill 目录>/scripts/stack.py   # <本 skill 目录> = work-queue-stack 的 skill 根目录
+S=<本 skill 目录>/scripts/stack.py   # <本 skill 目录> = campaign-work-stack 的 skill 根目录
 python3 $S propose --campaign <id> \
   --signal "同一总目标下待办 ≥2 项" --signal "预计跨会话、上下文可能被压缩" \
   --negative "单一文件小改" --cost "<不启用的具体代价>"
@@ -134,7 +134,7 @@ python3 $S propose --campaign <id> \
 ## 命令速查
 
 ```bash
-S=<本 skill 目录>/scripts/stack.py   # <本 skill 目录> = work-queue-stack 的 skill 根目录
+S=<本 skill 目录>/scripts/stack.py   # <本 skill 目录> = campaign-work-stack 的 skill 根目录
 python3 $S stacks                                       # 只读：全局清单 + 当前指针
 python3 $S propose --campaign <id> --signal … --cost …   # 只读：启用申请卡
 python3 $S ensure  --campaign <id> --activation user_declared|user_approved_on_proposal --title <核心任务名>

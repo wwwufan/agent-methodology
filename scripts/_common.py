@@ -6,7 +6,7 @@ CODEX_HOME 口径、skills/ 清单扫描、frontmatter 解析、统一输出前�
 **禁止在各脚本内复制一份** —— 第二份实现就是第二真源：日后改口径必然只改到一处，
 剩下那处会静默漂移，而这类漂移恰好发生在"安装是否健康"的判据上，最难被发现。
 
-只用标准库（与 skills/work-queue-stack/scripts/stack.py 口径一致，不引入 PyYAML）。
+只用标准库（与 skills/campaign-work-stack/scripts/stack.py 口径一致，不引入 PyYAML）。
 """
 
 from __future__ import annotations

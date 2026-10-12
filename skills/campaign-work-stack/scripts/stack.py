@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""栈式工作队列：把「一轮里的多个待办」与「推进中衍生的新问题」外化到文件。
+"""总目标推进栈：把「一个总目标下的多个待办」与「推进中衍生的新问题」外化到文件。
 
 ## 为什么需要脚本而不是靠记性
 
 一轮里常有多个待办（①②③）。推进 ① 时衍生出新问题，若当场展开，思路被带走，
 ① 做完时 ②③ 与衍生项全都只存在于对话记忆里；而对话记忆会被压缩、换模型、跨天丢弃。
-本脚本把队列变成文件里的显式栈，并把三条纪律做成**机械动作**而非自觉：
+本脚本把推进状态外化成文件里的显式栈，并把三条纪律做成**机械动作**而非自觉：
 
-1. `show` 随时可跑 → 新工作开始前先把已有队列摊开
+1. `show` 随时可跑 → 新工作开始前先把已有推进栈摊开
 2. `capture` 先登记再决定 → 衍生问题不会因为在忙而消失
 3. `pop` **自动打印**四段回看 → 关掉一帧时必然看到「还剩什么、下一步做什么」
 
@@ -61,6 +61,7 @@ from typing import NamedTuple
 SCHEMA_VERSION = "work-queue-stack-v3"
 PREV_SCHEMA_VERSION = "work-queue-stack-v2"
 V1_SCHEMA_VERSION = "work-queue-stack-v1"
+# 上述字符串是已落盘 JSON 的兼容标识；skill 重命名不构成 schema 变更。
 
 # 栈的绑定对象是**总目标（campaign）**，与同目录的总目标台账 goal-ledger.md 一对一绑定。
 # 刻意不绑轮次 / 对话窗口 / 阶段 Goal：
@@ -538,7 +539,7 @@ def active_frame(data: dict) -> dict | None:
 
 
 def check_invariants(data: dict, *, ledger_path: Path | None = None) -> tuple[list[str], list[str]]:
-    """返回 (硬违规, 软警告)。硬违规非空 = 队列不可信，必须处理。"""
+    """返回 (硬违规, 软警告)。硬违规非空 = 推进栈不可信，必须处理。"""
     v: list[str] = []
     w: list[str] = []
     frames = data["frames"]
@@ -878,7 +879,7 @@ def render_markdown(data: dict) -> str:
     progress_text = render_progress(data)
     return f"""# 推进栈 · {data['campaign_id']}
 
-> **本文件由 `work-queue-stack/scripts/stack.py render` 生成，请勿手改。**
+> **本文件由 `campaign-work-stack/scripts/stack.py render` 生成，请勿手改。**
 > 真源是同目录的 `active-work-stack.json`；两者不一致时 `render --check` 会失败。
 
 - schema：`{data['schema_version']}`
@@ -1289,7 +1290,7 @@ def cmd_pop(args: argparse.Namespace) -> int:
               f"{[c['capture_id'] for c in mine_pend]}", file=sys.stderr)
         return 1
     if violations:
-        print(f"\n⚠ verify 有 {len(violations)} 项硬违规（不影响本次出栈，但队列已不可信，需尽快处理）：",
+        print(f"\n⚠ verify 有 {len(violations)} 项硬违规（不影响本次出栈，但推进栈已不可信，需尽快处理）：",
               file=sys.stderr)
         for x in violations:
             print(f"   - {x}", file=sys.stderr)
@@ -1574,7 +1575,7 @@ def cmd_survey(args: argparse.Namespace) -> int:
         # 会污染任何调用它的脚本。
         if not plan_path.exists() and not issue_path.exists():
             print(f"⚠ 未解析到任何池条目，且两个池文件都不存在：{plan_path}、{issue_path}")
-            print("  这两个文件是 work-queue-stack 的项目侧前提，由仓库初始化脚本铺设：")
+            print("  这两个文件是 campaign-work-stack 的项目侧前提，由仓库初始化脚本铺设：")
             print(f"    python3 <方法论仓库>/scripts/bootstrap_project.py {root}")
             return 0
         print(f"⚠ 未解析到任何池条目。检查是否存在：{plan_path}、{issue_path}")
@@ -1999,7 +2000,7 @@ def cmd_retitle(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="stack.py",
-        description="栈式工作队列：待办压栈、衍生登记、出栈回看与不变量校验",
+        description="总目标推进栈：待办压栈、衍生登记、出栈回看与不变量校验",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
 

@@ -9,7 +9,7 @@
 
 ## ① 动机与范围
 
-**动机**：`work-queue-stack`、`multi-phase-plan-orchestrator`、`single-phase-execution-loop`、
+**动机**：`campaign-work-stack`、`multi-phase-plan-orchestrator`、`single-phase-execution-loop`、
 `guided-goal-orchestrator`、`explain-task-failure` 这 5 个 skill 描述的是「怎么推进一项复杂工作」，
 与 diamond-agent 的业务毫无关系（实测：5 份 `SKILL.md` 正文里 `Diamond|diamond-agent|diamond_` 出现次数 = **0**，
 唯一命中是 `__pycache__/*.pyc` 二进制里烙进的绝对路径）。把它们留在业务项目里，别的项目就无法复用，
@@ -72,8 +72,8 @@ Phase 2 按裁决 **R14** 放宽为正则 `\.agents/skills/[A-Za-z0-9_-]+/`（�
 
 | # | 文件:行号 | 失效内容 | 失效原因 | 修复 Phase |
 | --- | --- | --- | --- | --- |
-| 1 | `skills/work-queue-stack/SKILL.md:128` | `S=.agents/skills/work-queue-stack/scripts/stack.py` | 新仓库里该脚本位于 `skills/work-queue-stack/scripts/stack.py`，没有 `.agents/` 前缀；挂载后经软链访问的路径也不是这个 | **2 · 已修**：改为自指占位符 `S=<本 skill 目录>/scripts/stack.py`（首次使用处带 1 行占位符定义） |
-| 2 | `skills/single-phase-execution-loop/SKILL.md:163` | 同上形式的 `S=.agents/skills/work-queue-stack/scripts/stack.py` | 同上（这是**跨 skill** 引用：spel 正文里用 wqs 的 `stack.py`） | **2 · 已修**：改为跨 skill 占位符 `S=<skill 根>/work-queue-stack/scripts/stack.py` |
+| 1 | `skills/campaign-work-stack/SKILL.md:128` | `S=.agents/skills/campaign-work-stack/scripts/stack.py` | 新仓库里该脚本位于 `skills/campaign-work-stack/scripts/stack.py`，没有 `.agents/` 前缀；挂载后经软链访问的路径也不是这个 | **2 · 已修**：改为自指占位符 `S=<本 skill 目录>/scripts/stack.py`（首次使用处带 1 行占位符定义） |
+| 2 | `skills/single-phase-execution-loop/SKILL.md:163` | 同上形式的 `S=.agents/skills/campaign-work-stack/scripts/stack.py` | 同上（这是**跨 skill** 引用：spel 正文里用 wqs 的 `stack.py`） | **2 · 已修**：改为跨 skill 占位符 `S=<skill 根>/campaign-work-stack/scripts/stack.py` |
 | 3 | `skills/multi-phase-plan-orchestrator/SKILL.md:101` | `python .agents/skills/multi-phase-plan-orchestrator/scripts/check_codex_backend.py` | 该脚本 Phase 2 已移到 `skills/single-phase-execution-loop/scripts/` 下，路径与文件名两处都变 | **2 · 已修**（与脚本移动**同批**）：改为 `python3 <skill 根>/single-phase-execution-loop/scripts/check_codex_backend.py` |
 | 4 | `skills/multi-phase-plan-orchestrator/SKILL.md:175-185` | diamond-agent 专属活动实例（`ui-csd-visual-variants`、`ui-image-system-recognition` 的 `execution_plan` / `progress_tracker` / `commit_prefix` / 阶段序列，路径形如 `scratch/workbench/<campaign>/…`） | 这是**业务项目的活动台账**，不属跨项目复用的方法论；留在真源仓库会让每个新项目都看到两个与它无关的活动 | **2 · 已修**：168–EOF 整段替换为「活动实例的发现与登记」通用规则（指向项目侧 `workstacks/_activities.md`，并显式写明该文件**可能不存在、不是错误**）。**本仓库不创建该文件**（硬约束 2），活动台账由各业务项目自维护 |
 
@@ -144,10 +144,10 @@ Phase 1 口径 32/21 为历史基线；Phase 3 后现状 = **33 文件 / 22 目�
 8. ✅ **已按 ⑦ 裁定收口** · 抽 `references/role-contract.md`（三角色公共契约）：契约唯一真源 =
    `skills/single-phase-execution-loop/references/role-contract.md`；6 个角色模板**保持运行时自包含**
    （不指针化），模板与真源之间的重复由 `doctor.py` 第 13 组机械看护。裁定与理由见 ⑦.11 决策 ④。
-9. ✅ **已完成** · 治理 skill 的 `description` 与 `references/` 结构：`work-queue-stack` 的 description
+9. ✅ **已完成** · 治理 skill 的 `description` 与 `references/` 结构：`campaign-work-stack` 的 description
    由 13 行块体压到 8 行（其余 4 份本就 ≤8 行，未动）；`references/` 结构治理 = 新增
    `single-phase-execution-loop/references/`，并把三个编排 SKILL.md 里重复的接线规则收敛到
-   `work-queue-stack/references/activation-and-recovery.md`。保留词清单与「原位置 → 新位置」映射见 ⑦.9 / ⑦.10。
+   `campaign-work-stack/references/activation-and-recovery.md`。保留词清单与「原位置 → 新位置」映射见 ⑦.9 / ⑦.10。
 10. 若希望新项目也能用 `module-investigator`（第 4 个角色，AGENTS.md 规定它"只能由用户显式点名，
     不得自动委托"），加 `--with-investigator` 开关。Phase 1 **不 bootstrap 它**。
 
@@ -369,7 +369,7 @@ python3 <方法论仓库>/scripts/doctor.py --project "$FP" --no-global --json
   同文件存在匹配 ``<方法论仓库>\s*[`"']{0,2}\s*[=＝]`` 的行。
 - 本批落点共 **6 个文件**：`README.md`（「快速开始」代码块前的 `> **占位符约定**：…` 引用行）、
   仓库级三脚本 `install.py` / `bootstrap_project.py` / `doctor.py`（均在 `<方法论仓库>/scripts/` 下）、
-  `skills/work-queue-stack/scripts/stack.py`、`skills/single-phase-execution-loop/scripts/check_codex_backend.py`。
+  `skills/campaign-work-stack/scripts/stack.py`、`skills/single-phase-execution-loop/scripts/check_codex_backend.py`。
   脚本侧一律是模块 docstring 之后的**一行 `#` 注释**，5 处文本逐字同形；`doctor.py` 例外——它的 docstring
   「用法」块本身就用该占位符，故定义行放在 docstring 内紧邻首次使用处（同一句话，只是所在语法位置不同）。
   `docs/migration-diamond-agent.md` 因本节引用该占位符，也在节首放了一行定义（即本节开头那条引用）。
@@ -380,15 +380,15 @@ python3 <方法论仓库>/scripts/doctor.py --project "$FP" --no-global --json
   ``运行 `<方法论仓库>/scripts/bootstrap_project.py <PROJECT> --backend codex` `` 的占位符形态
   （裸程序名只在「cwd 恰好是仓库根」时才照做得通，而本脚本调用方的 cwd 是**项目根**）。
 
-### ⑦.9 `work-queue-stack` 的 description 治理（13 行 → 8 行）
+### ⑦.9 `campaign-work-stack` 的 description 治理（13 行 → 8 行）
 
-- 实测只有 `work-queue-stack` 超标（frontmatter `>-` 块体 13 行）；其余 4 份为 3 / 2 / 1 / 1 行，均 ≤8，本批**不动**。
+- 实测只有 `campaign-work-stack` 超标（frontmatter `>-` 块体 13 行）；其余 4 份为 3 / 2 / 1 / 1 行，均 ≤8，本批**不动**。
 - `allow_implicit_invocation` **保持现值**：它不在任何 `SKILL.md` frontmatter，而在 `agents/openai.yaml` ——
-  `explain-task-failure: true`、`guided-goal-orchestrator: false`、`work-queue-stack: true`
+  `explain-task-failure: true`、`guided-goal-orchestrator: false`、`campaign-work-stack: true`
   （附「survey/show/stacks/propose/verify/retro 全只读」的理由注释）；`multi-phase-plan-orchestrator` 与
   `single-phase-execution-loop` **没有 openai.yaml**。3 个 yaml 全部不在本批改动白名单内（与真源逐字节一致），
   即「隐式调用只落在只读命令上」这条性质由文件不变性机械保证。
-- **27 个必保触发信号词**（逐词 grep ≥1）：栈式工作队列、campaign、先登记再决定、survey、长期待办池、
+- **27 个必保触发信号词**（逐词 grep ≥1）：总目标推进栈、campaign、先登记再决定、survey、长期待办池、
   启用与恢复路由、唯一指针、还剩什么、做到哪了、别丢了、接下来做什么、要不要建栈、用哪个栈、工作计划、
   下一步做什么、问题清单、复盘、弯路、改了主意、修订判据、任务树、压缩、换模型、交接、单步问答、
   guided-goal-orchestrator、single-phase-execution-loop。
@@ -401,7 +401,7 @@ python3 <方法论仓库>/scripts/doctor.py --project "$FP" --no-global --json
 
 | 原位置 | 新位置 | 处置 |
 | --- | --- | --- |
-| `single-phase-execution-loop/SKILL.md`「## 推进栈接线」的「时点 × 机械动作 × 强度」全表（8 行，含 `verify` fail-closed 行、`amend`/终态帧不可改写行、`retro` 行、禁止 `ensure`/首次 `push` 行） | `work-queue-stack/references/activation-and-recovery.md`「### 通用接线动作表（三个编排身份共用）」 | **逐字迁入** |
+| `single-phase-execution-loop/SKILL.md`「## 推进栈接线」的「时点 × 机械动作 × 强度」全表（8 行，含 `verify` fail-closed 行、`amend`/终态帧不可改写行、`retro` 行、禁止 `ensure`/首次 `push` 行） | `campaign-work-stack/references/activation-and-recovery.md`「### 通用接线动作表（三个编排身份共用）」 | **逐字迁入** |
 | 同节「`verify` 失败意味着…」与「`retro` 同理不是可选项…」两段 | 同文件「### `verify` 门禁与 `retro` 语义」 | **逐字迁入** |
 | 同节「### 栈帧与 Phase 的对应关系」小节（4 条 bullet） | 同文件「### 栈帧与 Phase / 阶段的对应关系」 | **逐字迁入**（标题加「阶段」以覆盖 guided 身份，正文 4 条 bullet 未改），并补一行指向 role-contract.md §3 的第 1 类分流 |
 | `single-phase-execution-loop/SKILL.md` Step 0/1/2 的三份「必须输入 / 必须输出」清单、Reviewer YAML 代码块（七字段原样）、及其后「`residual_risks` 与 `issues` 同样必须逐条 `capture`」段 | `single-phase-execution-loop/references/role-contract.md` §2 | **逐字迁入** |

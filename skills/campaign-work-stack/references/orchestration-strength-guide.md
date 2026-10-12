@@ -1,7 +1,7 @@
 # 编排强度选择指南
 
-本文件是真源，位于 `<本 skill 目录>/references/orchestration-strength-guide.md`（`<本 skill 目录>` = work-queue-stack 的 skill 根目录），
-由 `work-queue-stack/SKILL.md` 引用：`survey` 选出大事后、决定用多强的编排时读。
+本文件是真源，位于 `<本 skill 目录>/references/orchestration-strength-guide.md`（`<本 skill 目录>` = campaign-work-stack 的 skill 根目录），
+由 `campaign-work-stack/SKILL.md` 引用：`survey` 选出大事后、决定用多强的编排时读。
 
 ## 核心立场：粒度不可预判，只能自适应
 
@@ -53,7 +53,7 @@
 | 强度 | 用什么 | 状态真源 | 谁解锁下一步 | 推进栈 |
 | --- | --- | --- | --- | --- |
 | 直接做 | 无 | 无 | — | **不启用**（除非用户声明，或 `propose` 获批准） |
-| 栈推进 | `work-queue-stack` | `active-work-stack.json`（`workstacks/<campaign>/`，v4 起**纳入 Git**、绑台账、跨轮续用） | 用户 `activate` 选帧 | 本体；由**用户声明或批准申请**而起 |
+| 栈推进 | `campaign-work-stack` | `active-work-stack.json`（`workstacks/<campaign>/`，v4 起**纳入 Git**、绑台账、跨轮续用） | 用户 `activate` 选帧 | 本体；由**用户声明或批准申请**而起 |
 | 单阶段门禁 | `single-phase-execution-loop` | 上层传入章节 + reviewer YAML | Reviewer PASS | **只接线不创建**：栈已存在才 `capture`/`pop` |
 | 多阶段自动 | `multi-phase-plan-orchestrator` | `execution-plan.md` + `progress.md` | Reviewer PASS **自动进 N+1** | **已存在则接线；不存在则 `propose` 申请，批准才建** |
 | 多阶段受控 | `guided-goal-orchestrator` | `goal-ledger.md` + 不可变快照(SHA-256) | **用户逐阶段批准** | **同上**（启动与恢复都先 `stacks` 探测） |
