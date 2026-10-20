@@ -33,8 +33,7 @@
 第 2 组要编译 .py，一律 py_compile.compile(..., cfile=<TMP>/...) 把产物写到临时目录。
 
 为什么默认不调用 check_codex_backend.py、也不默认调 stack.py verify：
-    前者除结构检查外还要求三角色 model **等于当前活动模型**（编排期门禁，不是安装缺陷），
-    并且 shell out 到 codex CLI（没有 codex 的机器上 doctor 就跑不了）；
+    前者是编排入口；本脚本第 6 组直接检查同样的角色结构、模型继承策略与权限；
     后者校验的是栈内容一致性，且 diamond-agent 的在飞栈正被其他窗口并发推进——
     把移动靶纳入 doctor 的退出码，等于制造假 authority。故 verify 设为 --stack-verify 显式开关。
 """
@@ -66,14 +65,15 @@ from _common import (  # noqa: E402
 
 ROLES = ("designer", "executor", "reviewer")
 SANDBOX_EXPECT = {"designer": "read-only", "executor": "workspace-write", "reviewer": "read-only"}
-REQUIRED_TOML_KEYS = ("model", "sandbox_mode", "approval_policy", "developer_instructions")
+REQUIRED_TOML_KEYS = ("sandbox_mode", "approval_policy", "developer_instructions")
 JSON_KEYS = ("group", "id", "level", "object", "message", "detail")
 # 第 1 组「同包 skill 齐全性」判据的规范名单（来源：全局硬约束 5「skill 名不变」）。
 # **只服务这一条判据**：挂载与扫描逻辑仍完全由磁盘驱动（`_common.iter_skills`），所以这份常量不是
 # 第二份清单真源，而是「本包承诺分发哪几个 skill」的显式声明。
 # 为什么必须有它：`iter_skills` 只枚举磁盘实存的 skill，删掉一个 skill 目录时第 1 组只会少一行 ok、
 # 不报任何 fail —— 最该红的信号反而静默通过（实测缺口）。
-CANONICAL_SKILLS = ("explain-task-failure", "exploration-loop", "guided-goal-orchestrator",
+CANONICAL_SKILLS = ("ai-task-triage", "project-context-brief",
+                    "explain-task-failure", "exploration-loop", "guided-goal-orchestrator",
                     "methodology-skill-sync", "multi-phase-plan-orchestrator",
                     "single-phase-execution-loop", "campaign-work-stack")
 
@@ -355,7 +355,7 @@ def _group5(home: Path, no_global: bool):
 
 def _group6(project, repo: Path):
     # 语义与 skills/single-phase-execution-loop/scripts/check_codex_backend.py 的 load_role_configs
-    # 对齐（越界校验 + 四个必填字段 + sandbox_mode 期望值），但**不比对活动模型、不 shell out 到 codex**：
+    # 对齐（越界校验 + 三个必填字段、model 省略 + sandbox_mode 期望值），但**不比对活动模型、不 shell out 到 codex**：
     # 那是编排期门禁，不是安装健康。
     # **未来工作（未排期）**：若给 check_codex_backend.py 加 --structure-only，本组可改为 subprocess
     # 复用并删除这段自实现。Phase 2 明确**不做**（裁决 R17）：计划范围未列它，且它会让 doctor 同时
@@ -411,6 +411,11 @@ def _group6(project, repo: Path):
             rows.append(_row(6, "fail", role,
                              f"{config_path.name} 缺少非空字段：{', '.join(bad)}", key=role)); item += 1
             continue
+        if "model" in payload:
+            rows.append(_row(6, "fail", role,
+                             "角色配置必须省略 model，以继承主窗口模型",
+                             [f"文件：{config_path}"], key=role)); item += 1
+            continue
         got = str(payload["sandbox_mode"])
         if got != SANDBOX_EXPECT[role]:
             rows.append(_row(6, "fail", role,
@@ -418,7 +423,7 @@ def _group6(project, repo: Path):
                              [f"文件：{config_path}"], key=role)); item += 1
             continue
         rows.append(_row(6, "ok", role,
-                         f"注册与角色配置齐备（sandbox_mode={got}, approval_policy={payload['approval_policy']}, model={payload['model']}）",
+                         f"注册与角色配置齐备（sandbox_mode={got}, approval_policy={payload['approval_policy']}, model=inherit_parent）",
                          [f"config_file={config_file}"], key=role))
         item += 1
     return rows
@@ -988,7 +993,7 @@ def main() -> int:
         epilog="退出码：0=无 error（可以有 warn）；1=≥1 error；2=用法/环境错误。\n"
                "warn 永不影响退出码。全程只读：不 mkdir、不建软链、不在仓库内生成 __pycache__\n"
                "（第 2 组的 py_compile 产物写到 <TMP>/am-doctor-pyc/）。\n"
-               "编排期门禁（三角色模型是否等于活动模型）请另跑 "
+               "编排期门禁（三角色模型继承策略与权限）请另跑 "
                "skills/single-phase-execution-loop/scripts/check_codex_backend.py。",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

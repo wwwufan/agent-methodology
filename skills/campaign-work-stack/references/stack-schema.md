@@ -255,7 +255,7 @@ suspended ──子帧 pop 后自动恢复──┘  └──→ queued ──a
 | 本栈由 v1 迁移而来（**软警告**） | 老栈升级 | 无需处理；`retro` 会声明迁移点之前的改道计数不完整 |
 | `activation` 取值非法 | 手工改过 JSON | 只能是 `user_declared` / `user_approved_on_proposal` / `pre-v3-unknown` / `auto_orchestration`(legacy) |
 | `activation` 是 legacy `auto_orchestration`（**软警告**） | v3 时期编排自动启用留下的老栈 | 无需处理，也不改写历史；新栈不会再产生这个值（`ensure` 对新建栈强制要求非 legacy 的 `--activation`） |
-| 当前指针指向一个已 `closed` 的栈 | 栈收口后指针没切走 | `use --campaign <id>` 指向正在推进的栈；要复用 closed 栈先 `push` 新帧说明返工原因 |
+| 当前指针指向一个已 `closed` 的栈 | 旧版本或中断遗留的指针 | 新版最后一帧 `pop` 自动释放匹配 campaign 及栈路径的指针；旧遗留须核对后 `use` 指向实际在推进的栈，不为消除告警虚构新工作；要复用 closed 栈先 `push` 新帧说明返工原因 |
 | 当前指针指向别的 campaign（**软警告**） | 一个对话里换了栈却没走 `use` | 一个对话只允许一个栈；切换用 `use`（会留痕 `pointer_switched`），不要手改 `_current.json` |
 | `bound_ledger` 指向的台账不存在 | 台账被移动/删除，或栈被拷到别处 | 把栈与 `goal-ledger.md` 放回同一 campaign 目录，再 `ensure` 补绑 |
 | 台账 `campaign_id` 与栈不一致 | 栈被拷进了别的 campaign 目录 | 栈绑的是总目标：确认归属后改正 `campaign_id`，或把栈移回原 campaign |
@@ -275,7 +275,7 @@ suspended ──子帧 pop 后自动恢复──┘  └──→ queued ──a
 
 ## 与其他产物的写法约定
 
-- `campaign_id` 取台账里的 `campaign_id`（本仓库当前为 `ui-image-system-recognition`）；
+- `campaign_id` 取当前项目任务台账里的 `campaign_id`，不使用方法论仓库预设的业务活动名；
   `verify` 会拿台账正文反查它，两者不一致即硬违规 —— 所以不要靠改目录名来「换 campaign」。
 - 栈与台账属**过程与决策资产**，放 `workstacks/<campaign>/`（不进 `docs/`），**纳入 Git 提交**；
   `history/` 与 `_current.json` 由 `workstacks/.gitignore` 排除。

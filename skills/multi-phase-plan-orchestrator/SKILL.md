@@ -7,12 +7,14 @@ description: >-
 
 # 多阶段计划编排器
 
-本 skill 定义**多阶段计划的外层状态机**，不绑定单一主题。它只负责确定当前 Phase、读取执行计划、维护进度和在 Phase PASS 后推进到下一阶段。
+本 skill 定义**多阶段计划的外层状态机**，不绑定单一主题。它负责定位活动、选择当前 Phase、
+核对进度和在当前 Phase 完成收尾后推进到下一阶段；当前阶段记录由内层循环维护。
 
 ## 与单阶段循环的关系
 
-- 本 skill 是“外层编排器”，负责选择当前 Phase、管理进度和阶段切换。
+- 本 skill 是“外层编排器”，负责选择当前 Phase、核对整体进度和阶段切换。
 - 每个 Phase 内部的 designer -> executor -> reviewer、阶段级授权、FAIL 分流和重试规则，统一交给 `single-phase-execution-loop`。
+- 内层是当前阶段 retry、风险登记、完成记录及 Phase 帧收尾的唯一负责方；外层不重复计数、解释或关闭同一帧。
 
 ## 适用场景
 
@@ -24,15 +26,17 @@ description: >-
 
 ## 任务绑定（启动前必读）
 
-编排器从以下配置驱动；**用户未指定时，默认使用「活动实例 A」**。
+编排器从以下配置驱动：优先使用用户明确绑定；未指定时按文末“活动实例的发现与登记”
+读取项目侧材料，只在与当前任务匹配的活动唯一时继续。零个候选时补齐计划绑定，
+多个候选时请用户选择；不使用方法论仓库预设的活动默认值。
 
 | 配置项 | 含义 | 如何确定 |
 | --- | --- | --- |
-| `execution_plan` | 分阶段执行方案（含各阶段目标、步骤、验收、全局约束） | 用户指定路径，或活动实例默认值 |
-| `progress_tracker` | 进度跟踪文件（阶段状态、重试、基线） | 用户指定路径，或活动实例默认值 |
+| `execution_plan` | 分阶段执行方案（含各阶段目标、步骤、验收、全局约束） | 用户指定路径，或唯一匹配的项目活动绑定 |
+| `progress_tracker` | 进度跟踪文件（阶段状态、重试、基线） | 用户指定路径，或唯一匹配的项目活动绑定 |
 | `commit_prefix` | 用户批准 commit 时的 scope 前缀 | 默认 `refactor(<scope>)` |
 | `global_constraints` | 跨阶段硬约束（来自执行方案中的约束章节） | 从 `execution_plan` 摘录，交给内层单阶段循环 |
-| `max_retries` | 每阶段最大重试 | 默认 3；可被 `progress_tracker` 覆盖 |
+| `max_retries` | 每阶段最大纠正轮次（首次执行不计） | 默认 3；可被 `progress_tracker` 覆盖；计数及末次评审以角色契约 §3 为准 |
 
 启动时必须：
 
@@ -43,18 +47,19 @@ description: >-
 5. 默认沿用当前工作分支执行各阶段；仅当用户明确要求时才创建新分支
 6. 按 `<skill 根>/campaign-work-stack/references/activation-and-recovery.md`「各编排身份的接线」multi-phase 行执行：`stack.py stacks` 探测 → **已存在**则 `stack.py ensure --campaign <活动标识>` 幂等接线（只回显、不新建、不改 `activation`），随后 `stack.py show` 查看全栈；**不存在**则按六维信号评估并 `stack.py propose` 打印申请卡，**未获用户批准不得创建、不得声称已启用**；被拒则把新问题写进各 Phase 的 `remaining_risks` / `issues`，并在阶段收口处重提一次（同一轮内不重复申请）。
    本身份覆盖项：栈绑**总目标**（campaign）而非阶段或对话窗口，因此跨阶段、跨窗口续用同一个栈，**不得**为新一轮另起一个。
-   若存在**未关闭帧**，先向用户报告并请示收口或 `parked`，**不得**在未收口的栈上直接开新阶段（防止旧帧静默失效）。
+   复用当前阶段的活动帧；后续阶段的 `queued` 帧保留，不要求提前收口。
+   只有当前阶段尚未完成收尾、前置阻塞未解决或活动归属不明时，才停止切换并核对，不得静默抢占其他活动帧。
 
 若用户发起**新的重构活动**，须先具备或创建对应的 `execution_plan` 与 `progress_tracker`，并在对话中声明绑定（或新增「活动实例」条目后再启动）。
 
-## 实现取向（与项目全局约定一致）
+## 实现取向（继承当前任务要求）
 
-外层编排与内层单阶段循环须共同遵守：
+组装当前阶段输入时读取 `project-context-brief/references/task-contract.md`，外层与内层复用同一要求：
 
-- **采用与开发者沟通后确认的最佳实现**，不为缩小 diff 或图省事而选最小实现
-- 阶段内若存在多种可行方案，应先说明权衡并与用户对齐，再按确认方案落地
-- 不因「改动少」牺牲可维护性、模块边界、一致性或与 `global_constraints` 的符合度
-- 若最佳实现与最小实现差异较大，须在阶段摘要中说明理由，避免静默降级
+- 在已确认用途、质量要求及风险边界内选择合适实现；不为缩小 diff 牺牲已要求的保障，也不追加未要求的工程目标。
+- 熟悉度只影响信息与探索需求，不决定生产级或原型级质量；未指定时沿用项目约束及当前验收，关键缺口才询问。
+- 涉及目标、质量、成本、风险的实质取舍时说明影响并请用户确认；边界内已有依据的实现选择不重复索取批准。
+- 项目硬约束和批准方案保持有效；冲突时停止相关动作并澄清，不能用上下文摘要或“只要可用”覆盖。
 
 ## 阶段执行委托
 
@@ -63,13 +68,16 @@ description: >-
 - 活动标识、当前 Phase 编号与阶段标题
 - 当前阶段完整章节
 - `global_constraints`
+- 当前用途、质量/风险要求、明确暂缓项及其来源（复用计划和上下文，不另填表）
 - 当前工作分支名（仅用于追踪上下文）
 - 当前 retry 计数与 `max_retries`
 - 上一轮 reviewer YAML（如有）
 
 主代理不得在外层重复定义 designer/executor/reviewer 的 prompt 细节；这些细节以 `single-phase-execution-loop` 为准。
+内层返回后，外层按共享交接约定核对阶段位置、结论与证据范围、剩余阻塞及下一步权限，
+并执行下方“阶段结果决策”；交接建议不能绕过阶段收尾或自动扩大下一阶段授权。
 
-子代理模型、权限和角色契约按当前编排后端读取；不得把 Cursor 配置传给 Codex，也不得把 Codex 配置当作 Cursor frontmatter。
+子代理统一继承主窗口模型，角色配置与调用参数均不指定具体模型；权限和角色契约按当前编排后端读取；不得把 Cursor 配置传给 Codex，也不得把 Codex 配置当作 Cursor frontmatter。
 
 ## 编排后端适配
 
@@ -78,13 +86,13 @@ description: >-
 ### Cursor `Subagent` 后端
 
 - 读取 `.cursor/agents/<role>.md` frontmatter。
-- 显式传入 `model`、`readonly`、`is_background`。
-- 模型不可用或实际模型不一致时把当前 Phase 标记为 `BLOCKED`。
+- frontmatter 省略 `model`，调用时也不传具体模型；保留 `readonly`、`is_background` 参数。
+- 后端无法继承主窗口模型时把当前 Phase 标记为 `BLOCKED`。
 
 ### Codex named-agent 后端
 
 - 读取 `.codex/config.toml` 的 `agents.<role>.config_file` 与对应 TOML。
-- 通过接口提供的代理名调用，让 Codex 加载模型、sandbox、approval 和 developer instructions。
+- 通过接口提供的代理名调用，让 Codex 加载 sandbox、approval 和 developer instructions；角色 TOML 省略 `model`，模型继承父会话。
 - 调用结果无法确认命中注册角色时把当前 Phase 标记为 `BLOCKED`。
 
 ### Codex collaboration 后端
@@ -99,7 +107,7 @@ python3 <skill 根>/single-phase-execution-loop/scripts/check_codex_backend.py \
   --repo-root <repo-root>
 ```
 
-2. 只有输出 `status=ready` 时才能委托。校验器要求 Designer、Executor、Reviewer 的 Codex 配置模型都可用并与当前活动模型一致，因此后端托管继承不会造成角色模型漂移。
+2. 只有输出 `status=ready` 时才能委托。校验器要求 Designer、Executor、Reviewer 的 Codex 配置均省略 `model` 并保留各自权限与角色契约；模型由后端继承主窗口，不依赖 CLI 全局默认模型探测。
 3. 读取 `.codex/agents/<role>.toml` 的 `developer_instructions`，把它作为 `role_contract` 传入 `spawn_agent` prompt；不得读取 `.cursor/agents`。
 4. prompt 额外声明：
    - `orchestration_backend: codex_collaboration`
@@ -123,21 +131,26 @@ phase_authorization: 当前 Phase 已获阶段级授权，主代理只负责编�
 
 | 结论 | 动作 |
 | --- | --- |
-| 当前 Phase PASS | **先要求内层 `stack.py verify` 返回 `exit 0`**（存在未处置衍生即视为未 PASS）→ 更新 `progress_tracker`（status=done、时间戳、review_id、证据路径）→ `pop` 该 Phase 帧 → 进入 N+1；下一阶段由外层重新启动单阶段循环 |
-| 当前 Phase FAIL 且仍可重试 | 更新 retry 计数和失败摘要；按 `single-phase-execution-loop` 的分流规则继续本阶段 |
-| 当前 Phase FAIL 且达到 `max_retries` | 停止；向用户报告阻塞项（中文） |
+| 当前 Phase PASS 且内层收尾完成 | 核对内层返回的 `review_id`、证据、阶段 `done` 记录；有栈时核对其校验及 Phase 帧关闭结果，无栈时核对阶段记录完整性；不重复写入或 `pop`，再按原授权进入 N+1 |
+| Reviewer PASS 但内层收尾未完成 | 留在当前阶段，交内层从收尾记录恢复；不得提前进入 N+1 |
+| 当前 Phase FAIL 且仍可重试 | 交内层按 FAIL 分流继续；retry 与失败记录只由内层更新，外层不再加一次 |
+| 当前 Phase 最后一轮评审仍 FAIL 且达到 `max_retries` | 停止；不因切换路线刷新额度，不截断已启动末轮的评审 |
+| 内层因连续无进展或探索预算耗尽暂停 | 保留停止原因和原位置，交还用户；不自行重启内层或推进依赖该结果的阶段 |
 | 当前 Phase BLOCKED / NEEDS_CONFIRMATION | 停止；向用户报告待确认项，不推进阶段 |
 
-在上述 FAIL、达到 `max_retries` 或 BLOCKED 的分支中，先调用 `explain-task-failure` 生成通俗说明。说明必须附带一个能对应失败因果关系的日常例子，并明确哪些结论有证据、哪些仍未验证；它只负责解释，不修改进度文件、不改变阶段状态、不自动重跑昂贵任务。
+在上述 FAIL、达到 `max_retries` 或 BLOCKED 的分支中，复用内层已生成的 `explain-task-failure` 说明；
+只有失败发生在外层（如活动绑定/后端前置检查失败）或内层未提供解释时，才补一次。
+按 `campaign-work-stack/references/output-contract.md` 分级展示，区分证据与未验证项；
+日常例子仅在帮助理解或用户要求时提供，不得改变阶段状态或自动重跑昂贵任务。
 
-阻塞项与阶段范围外的问题还必须落进推进栈：`capture` 后按 `blocks`/`spawns`/`note` 处置，
-跨轮次缺陷 `pop --terminal escalated` 并在 `docs/operations/issues.md` 立项。
+有栈时，由问题所属的阶段负责方登记并处置阻塞项与阶段范围外问题，外层复用记录；
+仅在外层新发现、内层未登记的问题才由外层登记。无栈时保存到已有进度/阶段报告中，包含处置和恢复条件。
 **不得让阻塞只存在于对话里**——对话会被压缩、换模型或跨天丢弃。
 接线细节以 `<skill 根>/campaign-work-stack/references/activation-and-recovery.md`「各编排身份的接线」为准，三角色字段契约与 FAIL 五类分流以 `single-phase-execution-loop/references/role-contract.md` 为准，本 Skill 不重复定义。
 
-最后一个 Phase PASS、或整个计划被中止时，收尾报告必须附 `stack.py retro` 的
-「放弃的方案 / 明确搁置 / 用户方向切换」三段——多阶段计划跨越数天，
-中途被否决的路线若不显式复盘，下一轮极可能原样重走。
+最后一个 Phase PASS、或整个计划被中止时，已有栈仍运行 `stack.py retro`，按输出约定汇报
+「放弃的方案 / 明确搁置 / 用户方向切换」；无新增变化可简报，有变化说明原因和去向。多阶段计划跨越数天，
+中途被否决的路线若不显式复盘，下一轮极可能原样重走。无栈时从阶段记录回顾，不运行栈命令或伪造栈历史。
 
 **不得跳过阶段。除非用户明确要求，否则不得 commit。**
 
@@ -145,10 +158,11 @@ phase_authorization: 当前 Phase 已获阶段级授权，主代理只负责编�
 
 当用户说「继续重构」「继续 <活动名>」或 "continue refactor" 时：
 
-1. 解析任务绑定（默认或用户指定）
+1. 解析任务绑定（用户指定，或唯一匹配的项目侧活动）
 2. 读取 `progress_tracker` → 第一个未完成阶段
 3. 向用户报告当前状态（中文）
-4. 若需要进入新阶段，给出下一条可发送的单阶段循环启动命令；不得使用阻塞式确认表单
+4. 当前阶段收尾未完成时交回内层恢复；已完成且原多阶段授权仍有效时按序继续。
+   用户暂停、预算/重试门禁或新审批要求仍须停止，并给出准确恢复条件；不为普通阶段切换另加确认门禁。
 
 ## PR / Commit 约定
 

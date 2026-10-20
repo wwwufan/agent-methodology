@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""校验 Codex 协作编排所需的项目代理配置与当前运行模型。
+"""校验 Codex 协作编排所需的项目代理配置与父会话模型继承策略。
 
 归属：本检查是 `single-phase-execution-loop`（阶段内 designer→executor→reviewer 循环）在
 **委托子代理之前**必须跑的门禁，故脚本住在本 skill 的 `scripts/` 下（Phase 2 从
@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -25,11 +24,9 @@ from pathlib import Path
 
 REQUIRED_ROLES = ("designer", "executor", "reviewer")
 
-# 三类 not-ready 成因。分类是**给编排者看的**：role-config 要跑 bootstrap 铺配置，
-# model-binding 要改角色 model 或换后端，probe 要修 codex CLI 或显式传模型 —— 三者的下一步完全不同。
+# 配置结构缺失与模型继承/权限不满足分别报告，避免把模型名写回角色文件。
 REASON_ROLE_CONFIG = "role-config"
 REASON_MODEL_BINDING = "model-binding"
-REASON_PROBE = "probe"
 
 # RR29：hint 里的脚本路径改为 `<方法论仓库>/…` 占位符形态。裸程序名（`bootstrap_project.py`）
 # 只在「cwd 恰好是仓库根」时才照做得通，而本脚本的调用方（编排 skill）cwd 是**项目根**，
@@ -58,7 +55,7 @@ class NotReady(Exception):
 class RoleConfig:
     role: str
     config_path: str
-    model: str
+    model: str | None
     sandbox_mode: str
     approval_policy: str
     has_developer_instructions: bool
@@ -81,6 +78,8 @@ def load_role_configs(repo_root: Path) -> dict[str, RoleConfig]:
     if not isinstance(agents, dict):
         raise ValueError(f"Codex 项目配置缺少 agents: {registry_path}")
 
+    if "default_subagent_model" in agents:
+        raise ValueError("项目 agents.default_subagent_model 覆盖父会话模型，请移除该覆盖")
     result: dict[str, RoleConfig] = {}
     for role in REQUIRED_ROLES:
         registration = agents.get(role)
@@ -95,12 +94,10 @@ def load_role_configs(repo_root: Path) -> dict[str, RoleConfig]:
         except ValueError as exc:
             raise ValueError(f"Codex 角色配置越出 .codex: {role}: {config_path}") from exc
         payload = _read_toml(config_path)
-        model = str(payload.get("model") or "")
+        model = str(payload["model"]) if "model" in payload else None
         sandbox_mode = str(payload.get("sandbox_mode") or "")
         approval_policy = str(payload.get("approval_policy") or "")
         developer_instructions = str(payload.get("developer_instructions") or "").strip()
-        if not model:
-            raise ValueError(f"Codex 角色缺少 model: {role}")
         if not sandbox_mode:
             raise ValueError(f"Codex 角色缺少 sandbox_mode: {role}")
         if not approval_policy:
@@ -121,71 +118,25 @@ def load_role_configs(repo_root: Path) -> dict[str, RoleConfig]:
 def validate_backend(
     *,
     role_configs: dict[str, RoleConfig],
-    active_model: str,
-    available_models: set[str],
+    active_model: str | None = None,
+    available_models: set[str] | None = None,
 ) -> None:
-    """验证无 per-call model 参数的协作后端可以安全继承当前模型。"""
-    if not active_model:
-        raise ValueError("无法确定 Codex 当前活动模型")
-    if active_model not in available_models:
+    """校验继承策略与权限；不探测 CLI 全局默认模型来猜测主窗口模型。
+
+    active_model / available_models 只接收调用方明确提供的会话信息，保留旧调用兼容。
+    """
+    if active_model and available_models is not None and active_model not in available_models:
         raise ValueError(f"Codex 当前活动模型不在可用模型列表: {active_model}")
     for role in REQUIRED_ROLES:
         config = role_configs[role]
-        if config.model not in available_models:
-            raise ValueError(f"Codex 角色模型不可用: {role}: {config.model}")
-        if config.model != active_model:
-            raise ValueError(
-                "当前 spawn_agent 不支持 per-call model；角色模型必须与活动模型一致: "
-                f"{role}: configured={config.model} active={active_model}"
-            )
+        if config.model is not None:
+            raise ValueError(f"Codex 角色必须省略 model，以继承主窗口模型: {role}")
     if role_configs["designer"].sandbox_mode != "read-only":
         raise ValueError("Codex Designer 必须配置为 read-only")
     if role_configs["reviewer"].sandbox_mode != "read-only":
         raise ValueError("Codex Reviewer 必须配置为 read-only")
     if role_configs["executor"].sandbox_mode != "workspace-write":
         raise ValueError("Codex Executor 必须配置为 workspace-write")
-
-
-def _run_json(command: list[str]) -> dict | list:
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if not result.stdout.strip():
-        raise ValueError(
-            f"命令未返回 JSON: {' '.join(command)}: {result.stderr.strip()}"
-        )
-    try:
-        return json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"命令返回非法 JSON: {' '.join(command)}") from exc
-
-
-def detect_active_model(codex_bin: str = "codex") -> str:
-    report = _run_json([codex_bin, "doctor", "--json"])
-    if not isinstance(report, dict):
-        raise ValueError("codex doctor 输出必须是对象")
-    checks = report.get("checks")
-    if not isinstance(checks, dict):
-        raise ValueError("codex doctor 输出缺少 checks")
-    config_load = checks.get("config.load")
-    if not isinstance(config_load, dict):
-        raise ValueError("codex doctor 输出缺少 config.load")
-    details = config_load.get("details")
-    if not isinstance(details, dict):
-        raise ValueError("codex doctor config.load 缺少 details")
-    return str(details.get("model") or "")
-
-
-def detect_available_models(codex_bin: str = "codex") -> set[str]:
-    payload = _run_json([codex_bin, "debug", "models"])
-    rows = payload if isinstance(payload, list) else payload.get("models", [])
-    if not isinstance(rows, list):
-        raise ValueError("codex debug models 输出缺少 models")
-    models = {
-        str(row.get("slug") or row.get("id") or row.get("model") or "")
-        for row in rows
-        if isinstance(row, dict)
-    }
-    models.discard("")
-    return models
 
 
 def _load_role_configs_or_not_ready(repo_root: Path) -> dict[str, RoleConfig]:
@@ -196,24 +147,6 @@ def _load_role_configs_or_not_ready(repo_root: Path) -> dict[str, RoleConfig]:
             tomllib.TOMLDecodeError) as exc:  # TOMLDecodeError 是 ValueError 子类；显式列出只为可读
         raise NotReady(REASON_ROLE_CONFIG, f"{type(exc).__name__}: {exc}",
                        HINT_ROLE_CONFIG) from exc
-
-
-def _probe_models_or_not_ready(args) -> tuple[str, set[str]]:
-    """把探测阶段（shell out 到 codex CLI）的可预期失败收敛成 NotReady(probe)。"""
-    try:
-        active_model = args.active_model or detect_active_model(args.codex_bin)
-        available_models = (
-            set(args.available_model)
-            if args.available_model is not None
-            else detect_available_models(args.codex_bin)
-        )
-    except (ValueError, FileNotFoundError, OSError, subprocess.SubprocessError) as exc:
-        raise NotReady(
-            REASON_PROBE, f"{type(exc).__name__}: {exc}",
-            "无法从 codex CLI 读到模型信息：确认 --codex-bin 指向可执行的 codex"
-            f"（当前 {args.codex_bin}），或用 --active-model / --available-model 显式传入。",
-        ) from exc
-    return active_model, available_models
 
 
 def _validate_or_not_ready(role_configs, active_model, available_models) -> None:
@@ -227,9 +160,8 @@ def _validate_or_not_ready(role_configs, active_model, available_models) -> None
     except ValueError as exc:
         raise NotReady(
             REASON_MODEL_BINDING, str(exc),
-            "当前协作后端不支持 per-call model，角色模型必须等于活动模型"
-            f"（活动模型：{active_model or '未探测到'}）：把 .codex/agents/<role>.toml 的 model "
-            "改成活动模型后重跑，或改用支持 named-agent / per-call model 的后端。",
+            "三个角色的 TOML 必须省略 model，调用时不指定具体模型，由后端继承主窗口模型；"
+            "权限错误请按 reason 修复 sandbox_mode，不要写回具体模型名。",
         ) from exc
 
 
@@ -239,12 +171,13 @@ def main() -> int:
     parser.add_argument("--active-model")
     parser.add_argument("--available-model", action="append", default=None)
     parser.add_argument("--codex-bin", default="codex",
-                        help="探测活动模型与可用模型时调用的 codex 可执行文件；缺省 codex")
+                        help="兼容旧调用；不再通过 CLI 探测主窗口模型")
     args = parser.parse_args()
 
     try:
         role_configs = _load_role_configs_or_not_ready(args.repo_root)
-        active_model, available_models = _probe_models_or_not_ready(args)
+        active_model = args.active_model
+        available_models = set(args.available_model) if args.available_model is not None else None
         _validate_or_not_ready(role_configs, active_model, available_models)
     except NotReady as exc:
         # 结论走 **stdout**（调用方按 JSON 读），退出码 1；零 traceback 是本改造的硬要求。

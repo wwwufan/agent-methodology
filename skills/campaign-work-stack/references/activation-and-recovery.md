@@ -6,7 +6,8 @@
 ## 为什么启用栈是用户的决策
 
 任务栈的价值是把「待办 + 衍生问题 + 决策」外化成文件，避免**解决完一个问题就忘了后面还有什么**。
-但启用栈是有代价的：每轮要 `show`/`verify`、关帧要 `pop` 四段回看、收工要 `retro`。
+但启用栈是有代价的：每轮要 `show`/`verify`、关帧要 `pop` 四段回看、收工要 `retro`；
+用户展示按 [output-contract.md](output-contract.md) 分级，不能因此省略记录或校验。
 为一个一次性小活套上这套仪式，既浪费注意力，也会把该 campaign 的复盘数据污染成噪音。
 
 所以「该不该有栈」**不能由编排身份自动决定**：受控目标模式也可能只跑一个很小的阶段，
@@ -128,6 +129,8 @@ python3 $S propose --campaign <id> \
 
 - **代理不得删除任何栈**，也不得删帧或并帧凑数；清理无需代理参与
 - 终态**派生而不存储**：全部帧终态 ⇒ `closed`，否则 `open`（存标志位就多一个可能失真、需额外校验的字段）
+- 最后一帧 `pop` 后自动释放与该 campaign 和实际栈路径均匹配的 `_current.json`；只移除便利指针，
+  不删除栈或历史，不影响其他栈的指针。后续还有 `queued` 帧时不释放。
 - `stacks` 默认先列 `open`、`closed` 折叠但可查——**不清理 ≠ 看不见**，`retro` 的复盘价值必须保留
 - 孤儿空栈（0 帧）会在清单里被标出，供用户自行判断是否废弃
 
@@ -149,24 +152,55 @@ python3 $S show|survey|verify|retro --campaign <id>      # 见 ../SKILL.md
 | 身份 | 启动 / 恢复时做什么 |
 | --- | --- |
 | `guided-goal-orchestrator`（受控目标模式） | 先 `stacks` 探测：**已存在 → `ensure` 接线，不提问**；不存在 → `propose` 申请，未获批准不得创建、不得声称已启用；拒绝 → 写进 `remaining_risks` 并在自然边界重提。**栈绑总目标、与 `goal-ledger.md` 一对一**（从该 Skill 绝对约束 9 迁入的理由：受控模式下阶段之间的收尾工作——回写问题清单、更新台账、决定 push——恰恰发生在 Goal 释放之后，此时栈是唯一的状态载体，这正是它必须绑 campaign 而不能绑 Goal 的原因） |
-| `multi-phase-plan-orchestrator`（多阶段编排） | 同上；且若存在**未关闭帧**，先报告并请示收口或 `parked`，不得在未收口的栈上直接开新阶段 |
+| `multi-phase-plan-orchestrator`（多阶段编排） | 同上；复用当前 Phase 帧，后续阶段的 `queued` 帧正常保留；当前阶段尚未收口、前置阻塞未解决或活动归属不明时不得切换，不能仅因存在排队帧就停止 |
 | `single-phase-execution-loop`（单阶段编排） | **只接线不创建**：栈存在才 `capture`/`pop`/`verify`；不存在**不得创建**，改为写 `remaining_risks`/`issues` 并按本文件评估后 `propose` 申请 |
 | 直接做 / 普通对话 | 不启用；除非用户显式声明，或 `propose` 获批准 |
 
-### 通用接线动作表（三个编排身份共用；从 `single-phase-execution-loop/SKILL.md` 逐字迁入）
+### 有栈与无栈的适用边界
+
+下表中的栈动作**只在当前 campaign 已有且绑定正确的栈时执行**。未启用栈时：
+
+- 不调用 `capture` / `push` / `resolve` / `verify` / `pop` / `retro`，不为通过门禁临时建栈。
+- 主代理把角色输出、风险/问题、处置结果、验收证据和恢复条件保存到既有阶段记录
+  （普通编排为 `progress_tracker` 及其引用的报告；受控编排为 `goal-ledger.md` 及评审包）。
+- 收尾前检查上述记录完整、当前阶段没有未解决的阻塞、验收证据齐全；缺失则停止收尾。
+  “未启用栈”不等于“没有风险”，也不能声称栈校验已通过。
+- 原重试上限、阶段授权、人工审批和 Reviewer 门禁不变。有栈但文件损坏、绑定错误或校验失败时，
+  必须报错，**不能伪装成无栈路径**绕过门禁。
+
+### 状态写入的唯一责任方
+
+上下文、诊断和探索返回的最小信息以 `project-context-brief/references/task-contract.md` 为准；
+栈仅用现有 `origin` / `pointers` / `close_note` 保留位置与报告指针，不复制正文、不新增交接 schema。
+恢复父帧只恢复推进位置；原阶段的成功判据、风险约束与继续权限仍由阶段负责方核对。
+
+这里的责任方均指运行相应流程的**主代理**；Designer / Executor / Reviewer 返回报告，
+不自行改推进栈、阶段状态或重试计数。每个问题按来源记录去重，内外层复用同一处置记录。
+
+| 执行方式 | 当前阶段记录、retry、风险登记及 Phase 帧收尾 | 外层职责 |
+| --- | --- | --- |
+| 独立单阶段 | `single-phase-execution-loop` 的主代理 | 无外层；收尾后交还用户 |
+| 多阶段中的单阶段 | 仍由内层 `single-phase-execution-loop` 的主代理负责 | `multi-phase-plan-orchestrator` 核对结果并选择下一阶段，不重复计数、登记或 `pop` |
+| 受控目标编排 | `guided-goal-orchestrator` 的主代理负责台账及栈；复用角色/FAIL 契约，不执行普通单阶段的 `done` 收尾 | Reviewer PASS 仅进入 `awaiting_user_approval`；用户批准后才完成阶段并关闭 Phase 帧 |
+
+`verify` 检查状态结构，不证明业务完成或用户批准。Phase 帧已有终态时，恢复流程先核对同一次评审、
+证据和收尾记录，并重新 `verify`，只补尚未完成的记录步骤；不重复 `pop`，也不把任意 `pop` 失败当成幂等成功。
+`pop` 非事务操作，失败后可能已有写盘；必须读取实际状态，成功收尾需同时检查返回码与出栈后的 `verify`。
+
+### 通用接线动作表（仅适用于已启用栈）
 
 | 时点 | 机械动作 | 强度 |
 | --- | --- | --- |
-| Executor 返回 `remaining_risks` | 逐条 `capture --found-in <Phase 帧> --disposition blocks\|spawns\|note` | 必须 |
-| Reviewer 返回 `residual_risks` / `issues` | 逐条 `capture`；FAIL 归因写进 `--text` | 必须 |
-| 达到 `max_retries` 转 blocked | `capture` → `pop --terminal escalated`，并在 `docs/operations/issues.md` 立项 | 必须 |
-| **PASS 推进前** | **`verify` 必须 `exit 0`**，否则不得写 `progress_tracker`、不得进入下一阶段 | **fail-closed 门禁** |
-| PASS 推进时 | `pop` 当前 Phase 帧，`--note` 写 Reviewer 结论与证据路径 | 必须 |
+| Executor 返回 `remaining_risks` | 阶段负责方逐条 `capture --found-in <Phase 帧> --disposition blocks\|spawns\|note`，已有同源记录则复用并补充证据 | 必须 |
+| Reviewer 返回 `residual_risks` / `issues` | 阶段负责方逐条登记/复用；FAIL 归因写进记录，不由只读 Reviewer 写栈 | 必须 |
+| 最后一轮评审仍 FAIL 且达到 `max_retries` | 阶段负责方登记阻塞并在项目问题台账立项；记录真实 issue 指针后按依赖顺序收口对应帧，外层不重复；不把流程停止直接等同平台 Goal blocked | 必须 |
+| **阶段成功收尾前** | **`verify` 必须 `exit 0`**，且当前阶段阻塞已解决；否则不得标记成功或进入下一阶段，仍可记录失败与恢复条件 | **fail-closed 门禁** |
+| 阶段成功收尾时 | 由唯一负责方 `pop` 当前 Phase 帧；普通流程在 Reviewer PASS 后，受控流程在用户批准后；记录评审/批准与证据指针 | 必须 |
 | 帧的标题/判据写错、或验收口径变了 | `amend --frame <未关闭帧>`（改动自动留痕 `event_log`）；**终态帧不可改写**，要纠正就新压一帧说明返工 | 必须 |
-| 全部 Phase 收工 / 计划中止 / 交付前 | `retro`（只读）→ 原样转达「放弃的方案」「明确搁置」「用户方向切换」三段 | 必须 |
+| 全部 Phase 收工 / 计划中止 / 交付前 | `retro`（只读）→ 按输出约定汇报放弃、搁置和改道；无新增可简报，有变化须说明 | 必须 |
 | **任何时点** | **不得 `ensure` / 首次 `push` 创建栈**（只接线不创建；确有需要走 `propose` 申请，用户批准才建） | **禁止** |
 
-### `verify` 门禁与 `retro` 语义（逐字迁入）
+### `verify` 门禁与 `retro` 语义（已有栈时）
 
 `verify` 失败意味着存在未处置的衍生登记（`pending`），或 `blocks`/`spawns` 未落到某个帧或指针。
 这是**门禁而不是提醒**：先 `resolve` 干净再推进；不得跳过 `verify` 绕过。
@@ -176,17 +210,21 @@ python3 $S show|survey|verify|retro --campaign <id>      # 见 ../SKILL.md
 所以每一次改道与放弃都必须在发生的当时落进栈（`activate` / `pop --terminal wontfix|parked` + `--note`），
 不允许事后补记。
 
-### 栈帧与 Phase / 阶段的对应关系（避免栈被噪音淹没；逐字迁入）
+### 栈帧与 Phase / 阶段的对应关系（已有栈时）
 
-- **一个 Phase 一帧**：`push --title "Phase N <阶段名>" --criteria <该阶段验收标准>`。
+- **一个 Phase 一帧**：阶段负责方先按 campaign / Phase 绑定复用已有帧；确实没有时才
+  `push --title "Phase N <阶段名>" --criteria <该阶段验收标准>`。外层不得再次压同一 Phase 帧。
 - Phase 内的**返工重试不另立子帧**——retry 计数的真源是 `progress_tracker`，重复登记只会制造两份状态。
-- 只有**阶段范围外的新问题**才 `push --parent <Phase 帧>` 成子帧；范围内的实现偏差走 FAIL 分流规则 1，
-  由 Executor 在当前 Phase 内修掉。
+- 范围内的实现偏差走 FAIL 分流规则 1，由 Executor 在当前 Phase 内修掉。
+- 阻塞当前阶段的独立问题可建子帧；认知缺口按 `exploration-loop` 建探索子帧，
+  即使知识问题在阶段范围内，也不等同于给每次返工建帧。
+- 不阻塞当前阶段的问题登记为 `queued` 后续工作，不激活、不当场展开。
+  范围外事项的登记不等于实施授权；解决它需要超出原授权时，先交用户批准。
 - 判定「范围内/范围外」的依据是 `execution_plan` 的当前阶段章节与 `global_constraints`；
   拿不准时按**范围外**处理（先登记，宁可多登不可漏登）。
 
 注：上文「FAIL 分流规则 1」= `single-phase-execution-loop/references/role-contract.md` §3 的第 1 类
-（实现偏差 / 修复可直接编码 → `retry + 1` 交 Executor）。
+（实现偏差 / 修复可直接编码 → 交 Executor；retry 由该节统一计纠正轮次，分支内不再额外 +1）。
 
 ## 禁止行为
 

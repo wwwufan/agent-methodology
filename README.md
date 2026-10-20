@@ -1,7 +1,7 @@
 # agent-methodology
 
 跨项目复用的**方法论 skill 真源仓库**：把「怎么推进一项复杂工作」的编排方法（分阶段编排、单阶段三角色闭环、
-总目标推进栈、证据驱动探索、跨项目同步、受控目标编排、失败通俗解释）从具体业务项目里迁出来，独立成仓库，由各项目以**软链**方式挂载。
+总目标推进栈、证据驱动探索、任务诊断、上下文整理、跨项目同步、受控目标编排、失败通俗解释）从具体业务项目里迁出来，独立成仓库，由各项目以**软链**方式挂载。
 
 本仓库**不放任何业务内容**：没有业务数据、没有项目专属流程、没有某个游戏的资料库。
 业务 skill 留在各业务项目自己的 `.agents/skills/` 下。
@@ -47,13 +47,22 @@ python3 <方法论仓库>/scripts/install.py --project-link <PROJECT> --dry-run
 
 | 路径 | 内容 |
 | --- | --- |
-| `skills/` | **唯一真源**。每个子目录是一个 skill（`SKILL.md` + 可选 `scripts/`、`references/`、`agents/`）。目录名必须等于 `SKILL.md` frontmatter 里的 `name`——脚本按此扫描，不硬编码 skill 名。例外：`doctor.py` 持有本包规范 7 skill 名单（`CANONICAL_SKILLS`）仅用于齐全性判据；挂载/扫描逻辑仍按磁盘驱动 |
+| `skills/` | **唯一真源**。每个子目录是一个 skill（`SKILL.md` + 可选 `scripts/`、`references/`、`agents/`）。目录名必须等于 `SKILL.md` frontmatter 里的 `name`——脚本按此扫描，不硬编码 skill 名。例外：`doctor.py` 持有本包规范 skill 名单（`CANONICAL_SKILLS`）仅用于齐全性判据；挂载/扫描逻辑仍按磁盘驱动 |
 | `scripts/` | 仓库级工具：`install.py`（单目标挂载/漂移检测/卸载）、`sync_projects.py`（已登记项目的批量同步）、`bootstrap_project.py`（新项目 onboarding）、`doctor.py`（只读自检）、`_common.py`（共用真源解析，禁止在脚本内各自复制一份） |
 | `templates/` | `bootstrap_project.py` 的载荷：`codex-agents/`、`cursor-agents/`、`codex-config.fragment.toml`、`docs-operations/`、`workstacks/` |
 | `docs/` | 稳定文档：`discovery-probe.md`（skill 发现机制的探针结论与证据边界）、`migration-diamond-agent.md`（从 diamond-agent 迁出的过程真源，含暂存期不一致清单与口径注记） |
 
 脚本只用 Python 标准库，不引入 PyYAML 等第三方依赖；仓库根一律由 `Path(__file__).resolve().parents[1]`
 推导，与 cwd 无关，也不写死仓库落点（最终路径与仓库名待确认，见 `docs/migration-diamond-agent.md`）。
+
+## 任务诊断与上下文输入
+
+- `ai-task-triage`：推进方向不明时，诊断连续性、当前问题熟悉度、信息充分度与可验证性，给出最小必要路由，不直接执行。
+- `project-context-brief`：将当前任务所需的项目事实、约束、参考实现和验收方式整理成带来源的上下文包，不代替探索或业务决策。
+- 失败入口：`explain-task-failure` 取证解释后自动检查诊断条件；仅在已有路由不足以指导下一步时接入 `ai-task-triage`，不对每次可直接修复的失败重复诊断。
+- 诊断后的可选路径：恢复任务状态 → 补现有信息 → 验证未知知识 → 返回原执行入口；只走有必要的环节。任务栈批准、探索预算、编排审批与重试上限仍由原 Skill 管理。
+
+以上是当前会话中的 Skill 协作约定，不是后台自动化；诊断建议不构成修改代码、创建任务栈或启动编排的额外授权。
 
 ## 本机同步目标
 
@@ -89,5 +98,6 @@ Codex 与 Cursor 的角色配置**职责分离，不互相作为来源**：`temp
 named-agent 后端，`templates/cursor-agents/*.md` 供 Cursor `Subagent` 后端。`bootstrap_project.py`
 的 `--backend` 决定铺哪一组，铺 codex 时不读 `.cursor/`，铺 cursor 时不读 `.codex/`。
 
-编排期门禁（三角色模型是否等于当前活动模型）不在 `doctor.py` 的职责内，请另跑
+三个角色配置均省略 `model`，调用时也不传具体模型，统一继承主窗口模型；bootstrap 不再探测或固化 CLI 默认模型。
+`doctor.py` 会检查角色配置是否符合该策略；编排前还需运行
 `skills/single-phase-execution-loop/scripts/check_codex_backend.py`（Phase 2 已从 `multi-phase-plan-orchestrator/scripts/` 移到此处的单一执行闭环 skill 下）。

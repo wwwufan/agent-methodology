@@ -3,7 +3,7 @@
 
 用法（完整参数以 --help 为准）：
     python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT>
-    python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT> --backend codex --model <slug>
+    python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT> --backend codex
     python3 <方法论仓库>/scripts/bootstrap_project.py <PROJECT> --dry-run     # 打印渲染全文，零写盘
 
 铺什么：
@@ -24,12 +24,12 @@
     0 = 全部 created 或 skipped（含 --dry-run）
     1 = 需人工决策的冲突：config.toml 不可解析 / 围栏标记不完整 / agents.* 存在于围栏外
         / 渲染结果残留 {{ 或 }} / 模板文件缺失 / 写入后复检失败（以上失败一律**整体回滚**）
-    2 = 用法/环境错误：PROJECT 缺失或非目录、--backend 非法、模型探测失败且未给 --model、
+    2 = 用法/环境错误：PROJECT 缺失或非目录、--backend 非法、
         --force 未配 --backup-dir、写盘 OSError（同样整体回滚）
 
 写盘是**事务性**的：任一文件写失败或围栏复检不过，本次运行已写的文件全部还原，
 不留下半成品态（半成品比什么都没铺更糟 —— 幂等规则是「路径存在即 skipped、不比对内容」，
-残留文件永远不会被复检，两次 --model 不同就会静默留下与用户意图不符的角色配置）。
+残留文件永远不会被复检，两次模板内容不同就会静默留下与用户意图不符的角色配置）。
 """
 
 # <方法论仓库> = agent-methodology 仓库根目录（装着 skills/、scripts/、templates/ 的那一层）；用户可见定义见 README.md「占位符约定」。
@@ -40,7 +40,6 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -56,7 +55,7 @@ from _common import (  # noqa: E402
 
 ROLES = ("designer", "executor", "reviewer")
 SANDBOX_EXPECT = {"designer": "read-only", "executor": "workspace-write", "reviewer": "read-only"}
-REQUIRED_TOML_KEYS = ("model", "sandbox_mode", "approval_policy", "developer_instructions")
+REQUIRED_TOML_KEYS = ("sandbox_mode", "approval_policy", "developer_instructions")
 
 FENCE_OPEN = "# >>> agent-methodology:agents >>>"
 FENCE_CLOSE = "# <<< agent-methodology:agents <<<"
@@ -66,17 +65,7 @@ FENCE_NOTES = (
 )
 
 DEFAULT_REASONING_EFFORT = "medium"
-DEFAULT_CURSOR_MODEL = "gpt-5.6-sol-medium"
-DEFAULT_CURSOR_EXECUTOR_MODEL = "gpt-5.3-codex"
 DEFAULT_PROJECT_IDENTITY = "本项目"
-# issue 6：文案**由默认值常量派生**，不再手抄第二份模型名，也不再把「来源项目名 + 本活动的内部
-# 问题编号」带进每一个新项目 —— 那两样东西都不会随仓库 promote，新项目里读到只会一头雾水。
-# 改默认值时本警告自动跟着变，不存在「文案与实现两套说法」。
-CURSOR_MODEL_WARNING = (
-    f"[WARN] Cursor 模型名未显式指定，使用仓库默认值：designer/reviewer={DEFAULT_CURSOR_MODEL}、"
-    f"executor={DEFAULT_CURSOR_EXECUTOR_MODEL}（未验证在他机可用）；"
-    "可用 --cursor-model / --cursor-executor-model 覆盖"
-)
 
 RESIDUAL_RE = re.compile(r"\{\{[^}]*\}\}?")
 JSON_KEYS = ("path", "state", "action", "detail")
@@ -115,51 +104,6 @@ def _residual(text: str):
     return out
 
 
-def _probe_model(codex_bin: str):
-    """探测 Codex 活动模型。返回 (model, reason, note)；model 为 None 表示探测失败。
-
-    只解析 **stdout**（codex 的 WARNING 走 stderr，stdout 干净）。
-
-    **不以退出码判生死**，只以 stdout 是否可用判生死 —— 与 check_codex_backend.py 的
-    `_run_json` / `detect_active_model` 对齐（设计把该实现列为本探测路径的实测依据）。
-    实测：`codex doctor --json` 在沙箱里会因 "could not create PATH aliases: Operation not
-    permitted" 而 **exit 1**，但 stdout 仍是含 model 的合法 JSON，且参照实现
-    `detect_active_model()` 在同一环境下成功返回 qwen3.8-max。若把非零退出一律当失败，
-    探测路径在本机就是死路。非零退出但 stdout 可用时，把退出码记进 note 供人读输出告警。
-
-    四类失败（一律 → 调用方 exit 2、不写任何文件）：
-      ① 二进制不存在/无法执行；② stdout 为空；③ stdout 非合法 JSON；
-      ④ 缺 checks.config.load.details.model 或其值为空。
-    """
-    note = None
-    try:
-        proc = subprocess.run([codex_bin, "doctor", "--json"],
-                              capture_output=True, text=True, check=False)
-    except (OSError, ValueError) as exc:
-        return None, f"无法执行 {codex_bin}：{exc}", None
-    if proc.returncode != 0:
-        note = (f"{codex_bin} doctor 退出码 {proc.returncode}"
-                f"（stderr：{(proc.stderr or '').strip()[:160]}）；"
-                "stdout 仍是合法 JSON，故按参照实现继续采用其 model 字段")
-    if not (proc.stdout or "").strip():
-        return None, (f"{codex_bin} doctor 未返回 JSON（退出码 {proc.returncode}）："
-                      f"{(proc.stderr or '').strip()[:200]}"), None
-    try:
-        report = json.loads(proc.stdout)
-    except (json.JSONDecodeError, ValueError):
-        return None, f"{codex_bin} doctor 的 stdout 不是合法 JSON", None
-    if not isinstance(report, dict):
-        return None, f"{codex_bin} doctor 输出必须是对象", None
-    try:
-        model = report["checks"]["config.load"]["details"]["model"]
-    except (KeyError, TypeError):
-        return None, f"{codex_bin} doctor 输出缺少 checks.config.load.details.model", None
-    model = str(model or "").strip()
-    if not model:
-        return None, f"{codex_bin} doctor 返回的 model 为空", None
-    return model, None, note
-
-
 def _read_template(templates_root: Path, rel: str) -> str:
     path = templates_root / rel
     if not path.is_file():
@@ -178,8 +122,10 @@ def _check_codex_toml(rel: str, text: str, role: str):
     for key in REQUIRED_TOML_KEYS:
         if not str(payload.get(key) or "").strip():
             raise BootstrapError(1, f"{rel}: 渲染结果缺少非空的 {key}",
-                                 ["这四项在模板里是硬编码、不得参数化；本自检防止有人日后把它们"
+                                 ["这三项在模板里是硬编码、不得参数化；本自检防止有人日后把它们"
                                   "改成占位符，从而让 bootstrap 出来的项目永远过不了后端门禁。"])
+    if "model" in payload:
+        raise BootstrapError(1, f"{rel}: 角色配置必须省略 model，以继承主窗口模型")
     got = str(payload["sandbox_mode"])
     want = SANDBOX_EXPECT[role]
     if got != want:
@@ -204,10 +150,12 @@ def _check_cursor_md(rel: str, text: str, role: str):
         m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.*?)\s*$", line)
         if m:
             fm[m.group(1)] = m.group(2)
-    required = ["name", "model", "readonly"] + (["is_background"] if role == "executor" else [])
+    required = ["name", "readonly"] + (["is_background"] if role == "executor" else [])
     missing = [k for k in required if k not in fm or not fm[k]]
     if missing:
         raise BootstrapError(1, f"{rel}: frontmatter 缺少 {', '.join(missing)}", [])
+    if "model" in fm:
+        raise BootstrapError(1, f"{rel}: frontmatter 必须省略 model，以继承主窗口模型")
     if fm["name"] != role:
         raise BootstrapError(1, f"{rel}: frontmatter name={fm['name']} 与文件名主干 {role} 不一致", [])
 
@@ -380,7 +328,7 @@ def _rollback_report(written, headline, extra_details=()):
         details += [f"  {p}" for p in residual]
         details.append("请手工核对这些路径（--backup-dir 里可能有它们的原件）。")
     details.append("为什么整体回滚而不保留半成品：幂等规则是「路径存在即 skipped(exists)、不比对内容」，"
-                   "残留文件永远不会被复检，于是两次 --model 不同就会静默留下与用户意图不符的角色配置。")
+                   "残留文件永远不会被复检，于是两次模板内容不同就会静默留下与用户意图不符的角色配置。")
     return headline, details
 
 
@@ -419,16 +367,16 @@ def main() -> int:
     parser.add_argument("--backend", choices=("codex", "cursor", "both"), default="both")
     parser.add_argument("--project-name", metavar="NAME",
                         help='→ {{PROJECT_IDENTITY}} = "<NAME> 项目"；缺省 = "本项目"')
-    parser.add_argument("--model", metavar="M", help="→ {{CODEX_MODEL}}；缺省时探测 codex doctor")
+    parser.add_argument("--model", metavar="M", help="兼容旧调用；已弃用，不写入角色模型")
     parser.add_argument("--reasoning-effort", metavar="E", default=DEFAULT_REASONING_EFFORT,
                         help=f"→ {{{{CODEX_REASONING_EFFORT}}}}；缺省 {DEFAULT_REASONING_EFFORT}")
     parser.add_argument("--cursor-model", metavar="M", default=None,
-                        help=f"→ {{{{CURSOR_MODEL}}}}（designer/reviewer）；缺省 {DEFAULT_CURSOR_MODEL}")
+                        help="兼容旧调用；已弃用，不写入角色模型")
     parser.add_argument("--cursor-executor-model", metavar="M", default=None,
-                        help=f"→ {{{{CURSOR_EXECUTOR_MODEL}}}}；缺省 {DEFAULT_CURSOR_EXECUTOR_MODEL}")
-    parser.add_argument("--codex-bin", metavar="PATH", default="codex", help="探测用；缺省 codex")
+                        help="兼容旧调用；已弃用，不写入角色模型")
+    parser.add_argument("--codex-bin", metavar="PATH", default="codex", help="兼容旧调用；不再探测 CLI 模型")
     parser.add_argument("--dry-run", action="store_true",
-                        help="走完探测/渲染/冲突检测/三态判定并打印渲染全文，但零写盘（连目录都不建）")
+                        help="走完渲染/冲突检测/三态判定并打印渲染全文，但零写盘（连目录都不建）")
     parser.add_argument("--force", action="store_true",
                         help="覆盖 plain 文件（先移入 --backup-dir）；围栏只重写两个标记行之间的区间")
     parser.add_argument("--backup-dir", metavar="DIR",
@@ -469,36 +417,16 @@ def _run(args) -> int:
     want_codex = args.backend in ("codex", "both")
     want_cursor = args.backend in ("cursor", "both")
 
-    # ---- 占位符取值（{{CODEX_MODEL}} 只在需要渲染 codex 模板时才探测：
-    #      cursor-only onboarding 不应因为机器上没有 codex CLI 而失败）
-    model = args.model
-    model_source = "--model"
-    probe_note = None
-    if want_codex and not model:
-        model, reason, probe_note = _probe_model(args.codex_bin)
-        if not model:
-            raise BootstrapError(2, "无法探测活动模型，请显式传 --model <slug>"
-                                    "（角色模型必须与活动模型一致，check_codex_backend.py 会硬校验，"
-                                    "猜一个默认值等于埋一个必然的硬失败）",
-                                 [f"探测方式：{args.codex_bin} doctor --json → checks.config.load.details.model",
-                                  f"失败原因：{reason}", "本次未写任何文件。"])
-        model_source = f"{args.codex_bin} doctor --json"
+    # 模型由父会话继承，不把安装时 CLI 默认值固化进角色配置。
     identity = f"{args.project_name} 项目" if args.project_name else DEFAULT_PROJECT_IDENTITY
-    cursor_model = args.cursor_model or DEFAULT_CURSOR_MODEL
-    cursor_executor_model = args.cursor_executor_model or DEFAULT_CURSOR_EXECUTOR_MODEL
     mapping = {
         "PROJECT_IDENTITY": identity,
-        "CODEX_MODEL": model or "",
         "CODEX_REASONING_EFFORT": args.reasoning_effort,
-        "CURSOR_MODEL": cursor_model,
-        "CURSOR_EXECUTOR_MODEL": cursor_executor_model,
     }
     rendered_values = {
         "{{PROJECT_IDENTITY}}": identity,
-        "{{CODEX_MODEL}}": f"{model or '(未使用)'}　来源：{model_source}" if want_codex else "(未使用)",
         "{{CODEX_REASONING_EFFORT}}": args.reasoning_effort,
-        "{{CURSOR_MODEL}}": f"{cursor_model}　来源：{'--cursor-model' if args.cursor_model else '默认值（未验证在他机可用）'}",
-        "{{CURSOR_EXECUTOR_MODEL}}": f"{cursor_executor_model}　来源：{'--cursor-executor-model' if args.cursor_executor_model else '默认值（未验证在他机可用）'}",
+        "model_policy": "inherit_parent",
     }
 
     # ---- 渲染（全或无：先渲染 + 自检全部通过，才允许写任何文件）
@@ -568,16 +496,11 @@ def _run(args) -> int:
                      "message": f"围栏注册：{fence_plan['action']}",
                      "detail": fence_plan["detail"], "_fence": fence_plan})
 
-    # ---- warnings（C2：兑现 R3 的「不静默」——探测退出码与 Cursor 模型默认值都要能被机器读到）
-    # 两个 Cursor 模型都由用户显式给出时不再发这条警告：`CURSOR_MODEL_WARNING` 说的是
-    # 「模型名未显式指定，使用仓库默认值」，用户既然自己给了值，这句话就是假的 ——
-    # 继续打印它等于一条谎报警告。故触发条件是「本次确实用上了仓库默认值」，不是「跑了一次 bootstrap」。
-    cursor_model_defaulted = want_cursor and not (args.cursor_model and args.cursor_executor_model)
+    # 兼容旧参数，但明确报告其不再生效，避免静默忽略用户意图。
     warnings = []
-    if probe_note:
-        warnings.append(probe_note)
-    if cursor_model_defaulted:
-        warnings.append(CURSOR_MODEL_WARNING)
+    if any(value is not None for value in
+           (args.model, args.cursor_model, args.cursor_executor_model)):
+        warnings.append("模型覆盖参数已弃用并忽略；三个角色统一继承主窗口模型。")
 
     # ---- 人读输出：逐条打印实际替换值 + warnings（与上面的 JSON 列表同源，不各说一套）
     if not args.json:
@@ -586,10 +509,8 @@ def _run(args) -> int:
         print("渲染替换值（逐条）：")
         for key, value in rendered_values.items():
             print(f"  {key} = {value}")
-        if probe_note:
-            print(f"[WARN] {probe_note}")
-        if cursor_model_defaulted:
-            print(CURSOR_MODEL_WARNING)
+        for warning in warnings:
+            print(f"[WARN] {warning}")
         print()
 
     if args.dry_run and not args.json:

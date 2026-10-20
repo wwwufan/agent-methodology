@@ -345,6 +345,26 @@ def stack_status(data: dict) -> str:
     return "open" if open_frames(data) else "closed"
 
 
+def _release_closed_pointer(jp: Path, data: dict) -> None:
+    """仅释放已关闭栈自己的当前指针；不删除栈、台账、视图或历史。"""
+    if stack_status(data) != "closed":
+        return
+    root = _repo_root_or_none(jp)
+    if root is None:
+        return
+    pp = _pointer_path(root, layout_for_root(root))
+    ptr = _read_pointer(pp)
+    if not ptr or ptr.get("campaign") != data.get("campaign_id"):
+        return
+    stack_path = ptr.get("stack_path")
+    if not isinstance(stack_path, str) or not stack_path:
+        return
+    if (root / stack_path).resolve() != jp.resolve():
+        return
+    pp.unlink()
+    print(f"[OK] 栈已全部收口，已释放当前指针：{pp}（栈与历史保留）")
+
+
 def _resolve_ledger_path(json_path: Path, data: dict | None = None) -> Path | None:
     """定位总目标台账的绝对路径，供 `check_invariants` 校验绑定。
 
@@ -1241,6 +1261,7 @@ def cmd_pop(args: argparse.Namespace) -> int:
              detail=f"{frame['frame_id']} 关闭后自动恢复栈顶")
     save(jp, data)
     render_view(jp, mp, data)
+    _release_closed_pointer(jp, data)
 
     # ---- 强制四段回看：由脚本打印，模型无法跳过 ----
     print("=" * 72)
