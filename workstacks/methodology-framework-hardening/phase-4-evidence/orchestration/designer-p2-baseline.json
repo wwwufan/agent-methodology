@@ -1,0 +1,74 @@
+{
+  ".codex/agents/designer.toml": {
+    "mode": 420,
+    "sha256": "0fdc6adb273c487d0e790e2e1c73c038c588afe6bf8ac6fa01832c859023d1ac"
+  },
+  ".codex/agents/executor.toml": {
+    "mode": 420,
+    "sha256": "c5d9363c9e7a16f6333a5f12b4b70d884069c918299c3e9a63fbdb5530d010b9"
+  },
+  ".codex/agents/reviewer.toml": {
+    "mode": 420,
+    "sha256": "ace9e9b9c8aa554d02aafd5afb6f2f7180687bc6797f4270f6f9cb714302ded1"
+  },
+  ".codex/config.toml": {
+    "mode": 420,
+    "sha256": "aaeaef9003a327393c4dcbc49ba1ead0cf7277554d9e7b0cf8fe2a042a4655ca"
+  },
+  "AGENTS.md": {
+    "mode": 420,
+    "sha256": "d9013cf88dc8564428f88b7b26210a2d2a91df9e7082a6241433d32042314291"
+  },
+  "plan.md": {
+    "mode": 420,
+    "sha256": "8aee29d28fd3529b6c463ec55985456d5b03111f6f48e4b724363452e79391fd"
+  },
+  "progress.md": {
+    "mode": 420,
+    "sha256": "46ac85ed4c8eef17140381ad960b0f73eec2b47826db0b4c8127d98cad047f44"
+  },
+  "scratch/designer-p1.md": {
+    "mode": 420,
+    "sha256": "17f20c0380d384d780fa8cc2940041c25cc272f2b3f4f9cdbff0416a5c1c6432"
+  },
+  "scratch/executor-p1.md": {
+    "mode": 420,
+    "sha256": "2dd06d991635763dc2828c86b7fc1621ce1e69d57a4eea07c4e3c76f35269e96"
+  },
+  "scratch/orchestration-startup.md": {
+    "mode": 420,
+    "sha256": "7246d48b517e7848f3e9d2fe471848716abea93e58053544188a0ebbc353792d"
+  },
+  "scratch/reviewer-p1-original.md": {
+    "mode": 420,
+    "sha256": "e8d117e2e2c25c6232b203d54a8f9f810377007c9758312eba26f927144f5743"
+  },
+  "scratch/reviewer-p1.md": {
+    "mode": 420,
+    "sha256": "56bcfc1277c95183ebd8dfef7a0d3dcdeb38303f0b62b4ab5fe23341250fd159"
+  },
+  "test_phase1.py": {
+    "mode": 420,
+    "sha256": "b3001654d81206f2d69cfa0f59a2b8d41ea927097857b7942ec4b4b3fe2340e4"
+  },
+  "test_phase2.py": {
+    "mode": 420,
+    "sha256": "86cd304f048717f02321415b6195a409fd2a023b411c451a49cbc6722d57b4e2"
+  },
+  "utils.py": {
+    "mode": 420,
+    "sha256": "9cc8c953afea73a9e5a80977079c15a35d67c3c9bc16b77f01fc570e16c67c7a"
+  },
+  "workstacks/number-tools/active-work-stack.json": {
+    "mode": 420,
+    "sha256": "599996b414c0123aa01a41ab91d107b706f9ace9372f999ed4f0194596a60f95"
+  },
+  "workstacks/number-tools/active-work-stack.md": {
+    "mode": 420,
+    "sha256": "98b8c098e852ce726602a29be04d54ee57a852eb347416102cb61b41c30b38b1"
+  },
+  "workstacks/number-tools/goal-ledger.md": {
+    "mode": 420,
+    "sha256": "06c54e23762cb00a2188f6baefe292a0d63ff52540bd410ea27af93b00968678"
+  }
+}

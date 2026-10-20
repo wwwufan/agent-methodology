@@ -1,0 +1,210 @@
+{
+  "schema_version": "work-queue-stack-v3",
+  "campaign_id": "title-search",
+  "bound_ledger": "workstacks/title-search/goal-ledger.md",
+  "activation": "user_declared",
+  "updated_at": "2026-10-20T15:59:39+08:00",
+  "frames": [
+    {
+      "frame_id": "F-001",
+      "depth": 0,
+      "parent": null,
+      "title": "确定分词路线",
+      "status": "done",
+      "goal": "仅以当前标注样本top-1选择路线并交接",
+      "criteria": [
+        "可复查实验支持选路，适用范围、预算和下一步权限已记录到evidence.md"
+      ],
+      "origin": "",
+      "pointers": {},
+      "spawned": [
+        "F-003"
+      ],
+      "created_at": "2026-10-20T15:56:48+08:00",
+      "closed_at": "2026-10-20T15:59:39+08:00",
+      "close_note": "已核对F-003证据并选择words：本样本top-1为4/4，对照whitespace为2/4。验收达成：evidence.md保存原需求、预算1/2、预先判据、逐样本结果、指纹及原型实现者交接。C-001已由F-003解决；本轮停止。仅F-002保持queued，不实施、不宣称原型或生产验收完成；下一步需用户授权实现入口并明确输入输出和边界验收。"
+    },
+    {
+      "frame_id": "F-002",
+      "depth": 0,
+      "parent": null,
+      "title": "实现并验收搜索入口",
+      "status": "queued",
+      "goal": "根据选路证据实现本地原型入口；本轮不实施",
+      "criteria": [
+        "另获授权后明确入口输入输出及验收，完成实现并记录验证证据"
+      ],
+      "origin": "用户原请求；本轮明确不实施，后续需授权",
+      "pointers": {
+        "handoff": "evidence.md",
+        "task_contract": "workstacks/title-search/goal-ledger.md"
+      },
+      "spawned": [],
+      "created_at": "2026-10-20T15:56:54+08:00",
+      "closed_at": null,
+      "close_note": null
+    },
+    {
+      "frame_id": "F-003",
+      "depth": 1,
+      "parent": "F-001",
+      "title": "验证两种分词的样本top-1",
+      "status": "done",
+      "goal": "用最多2次完整实验解锁F-001选路并交接原型实现者",
+      "criteria": [
+        "候选假设、预先判据、预算、逐样本结果、结论及返回权限均有证据"
+      ],
+      "origin": "认知缺口C-001；返回F-001及后续原型实现者；本轮不实施F-002",
+      "pointers": {
+        "report": "evidence.md",
+        "experiment": "experiment.py",
+        "samples": "samples.json",
+        "candidates": "candidates.py"
+      },
+      "spawned": [],
+      "created_at": "2026-10-20T15:57:13+08:00",
+      "closed_at": "2026-10-20T15:59:22+08:00",
+      "close_note": "预算累计1/2，剩余1；预先H1为words优于whitespace；固定4查询/4文档及search只替换分词。结果words=4/4、whitespace=2/4，支持H1；证据evidence.md、experiment.py及输入指纹。有效进展：解除选路阻塞，连续无进展0，已有充分证据停止。返回F-001及原型实现者，适用范围仅当前样本，不证明生产质量；F-002待授权且本轮不实施。"
+    }
+  ],
+  "captures": [
+    {
+      "capture_id": "C-001",
+      "at": "2026-10-20T15:57:04+08:00",
+      "text": "当前未知whitespace与words在现有4条标注查询上的top-1优劣；需最小对照实验才能选路",
+      "found_in": "F-001",
+      "disposition": "blocks",
+      "frame_id": "F-003",
+      "pointer": null
+    }
+  ],
+  "pop_log": [
+    {
+      "at": "2026-10-20T15:59:22+08:00",
+      "frame_id": "F-003",
+      "terminal": "done",
+      "note": "预算累计1/2，剩余1；预先H1为words优于whitespace；固定4查询/4文档及search只替换分词。结果words=4/4、whitespace=2/4，支持H1；证据evidence.md、experiment.py及输入指纹。有效进展：解除选路阻塞，连续无进展0，已有充分证据停止。返回F-001及原型实现者，适用范围仅当前样本，不证明生产质量；F-002待授权且本轮不实施。",
+      "spawned": [],
+      "remaining": [
+        "F-001",
+        "F-002"
+      ]
+    },
+    {
+      "at": "2026-10-20T15:59:39+08:00",
+      "frame_id": "F-001",
+      "terminal": "done",
+      "note": "已核对F-003证据并选择words：本样本top-1为4/4，对照whitespace为2/4。验收达成：evidence.md保存原需求、预算1/2、预先判据、逐样本结果、指纹及原型实现者交接。C-001已由F-003解决；本轮停止。仅F-002保持queued，不实施、不宣称原型或生产验收完成；下一步需用户授权实现入口并明确输入输出和边界验收。",
+      "spawned": [
+        "F-003"
+      ],
+      "remaining": [
+        "F-002"
+      ]
+    }
+  ],
+  "event_log": [
+    {
+      "seq": 1,
+      "at": "2026-10-20T15:56:48+08:00",
+      "kind": "pushed",
+      "frame_id": "F-001",
+      "detail": "确定分词路线"
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-20T15:56:48+08:00",
+      "kind": "activated",
+      "frame_id": "F-001",
+      "actor": "dfs",
+      "detail": "压栈时 --activate 抢占（父帧直接子帧，计划内深入）"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-20T15:56:54+08:00",
+      "kind": "pushed",
+      "frame_id": "F-002",
+      "detail": "实现并验收搜索入口"
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-20T15:57:04+08:00",
+      "kind": "captured",
+      "capture_id": "C-001",
+      "frame_id": "F-001",
+      "disposition": "blocks",
+      "detail": "当前未知whitespace与words在现有4条标注查询上的top-1优劣；需最小对照实验才能选路"
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-20T15:57:13+08:00",
+      "kind": "suspended",
+      "frame_id": "F-001",
+      "actor": "dfs",
+      "detail": "被新压入的子帧抢占"
+    },
+    {
+      "seq": 6,
+      "at": "2026-10-20T15:57:13+08:00",
+      "kind": "pushed",
+      "frame_id": "F-003",
+      "parent": "F-001",
+      "detail": "验证两种分词的样本top-1"
+    },
+    {
+      "seq": 7,
+      "at": "2026-10-20T15:57:13+08:00",
+      "kind": "activated",
+      "frame_id": "F-003",
+      "actor": "dfs",
+      "detail": "压栈时 --activate 抢占（父帧直接子帧，计划内深入）"
+    },
+    {
+      "seq": 8,
+      "at": "2026-10-20T15:57:19+08:00",
+      "kind": "resolved",
+      "capture_id": "C-001",
+      "disposition": "blocks",
+      "frame_id": "F-003"
+    },
+    {
+      "seq": 9,
+      "at": "2026-10-20T15:58:55+08:00",
+      "kind": "amended",
+      "frame_id": "F-003",
+      "detail": "origin: '—' → '认知缺口C-001；返回F-001及后续原型实现者；本轮不实施F-002'; pointers: 合并 ['report', 'experiment', 'samples', 'candidates']"
+    },
+    {
+      "seq": 10,
+      "at": "2026-10-20T15:59:03+08:00",
+      "kind": "amended",
+      "frame_id": "F-002",
+      "detail": "origin: '—' → '用户原请求；本轮明确不实施，后续需授权'; pointers: 合并 ['handoff', 'task_contract']"
+    },
+    {
+      "seq": 11,
+      "at": "2026-10-20T15:59:22+08:00",
+      "kind": "popped",
+      "frame_id": "F-003",
+      "terminal": "done",
+      "detail": "预算累计1/2，剩余1；预先H1为words优于whitespace；固定4查询/4文档及search只替换分词。结果words=4/4、whitespace="
+    },
+    {
+      "seq": 12,
+      "at": "2026-10-20T15:59:22+08:00",
+      "kind": "resumed",
+      "frame_id": "F-001",
+      "actor": "dfs",
+      "detail": "F-003 关闭后自动恢复栈顶"
+    },
+    {
+      "seq": 13,
+      "at": "2026-10-20T15:59:39+08:00",
+      "kind": "popped",
+      "frame_id": "F-001",
+      "terminal": "done",
+      "detail": "已核对F-003证据并选择words：本样本top-1为4/4，对照whitespace为2/4。验收达成：evidence.md保存原需求、预算1/2、预先判"
+    }
+  ],
+  "title": "标题检索原型"
+}

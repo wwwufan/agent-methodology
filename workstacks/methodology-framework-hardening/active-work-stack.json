@@ -1,0 +1,421 @@
+{
+  "schema_version": "work-queue-stack-v3",
+  "campaign_id": "methodology-framework-hardening",
+  "bound_ledger": "workstacks/methodology-framework-hardening/goal-ledger.md",
+  "activation": "user_approved_on_proposal",
+  "updated_at": "2026-10-20T16:25:41+08:00",
+  "frames": [
+    {
+      "frame_id": "F-001",
+      "depth": 0,
+      "parent": null,
+      "title": "阶段一：规则一致性修复",
+      "status": "done",
+      "goal": "只修复流程冲突，不改变质量、预算或输出策略",
+      "criteria": [
+        "无栈路径可收口，有栈门禁不减弱",
+        "阶段收尾唯一负责，正常排队不阻塞切换",
+        "历史条款、引用和模板一致；保留人工审批",
+        "校验、回归与四项目同步复查通过"
+      ],
+      "origin": "",
+      "pointers": {
+        "evidence": [
+          "workstacks/methodology-framework-hardening/phase-1-verification.md"
+        ]
+      },
+      "spawned": [],
+      "created_at": "2026-10-20T14:26:49+08:00",
+      "closed_at": "2026-10-20T14:40:49+08:00",
+      "close_note": "四项判据均完成：有栈/无栈路径、唯一收尾责任、历史规则与模板对齐；21项测试和仓库自检通过，四项目同步复查通过。证据见 phase-1-verification.md；完整Agent行为回归及项目角色副本刷新未执行。阶段二至四待批准。"
+    },
+    {
+      "frame_id": "F-002",
+      "depth": 0,
+      "parent": null,
+      "title": "阶段二：输入与交接",
+      "status": "done",
+      "goal": "",
+      "criteria": [
+        "共享最小输入复用已有材料，不强制新表单",
+        "质量要求贯穿设计实施评审，保持硬约束与授权",
+        "最小交接定位原任务，保留证据适用范围及继续权限",
+        "五场景规则核对、校验回归及四项目同步复查通过"
+      ],
+      "origin": "2026-10-20 用户批准本对话阶段二六部分修改方案",
+      "pointers": {
+        "plan": [
+          "workstacks/methodology-framework-hardening/goal-ledger.md"
+        ],
+        "evidence": [
+          "workstacks/methodology-framework-hardening/phase-2-verification.md"
+        ]
+      },
+      "spawned": [],
+      "created_at": "2026-10-20T14:26:49+08:00",
+      "closed_at": "2026-10-20T14:54:38+08:00",
+      "close_note": "四项判据完成：共享最小输入、质量要求贯穿角色、最小交接及权限边界已对齐；五场景静态走查完成，7个Skill校验、21项回归、仓库自检及四项目同步复查通过。证据见 phase-2-verification.md；未覆盖项目角色副本，未实跑多轮Agent。阶段三四待批准。"
+    },
+    {
+      "frame_id": "F-003",
+      "depth": 0,
+      "parent": null,
+      "title": "阶段三：收敛与输出",
+      "status": "done",
+      "goal": "",
+      "criteria": [
+        "统一纠正轮次与末次评审边界，探索预算和无进展记录跨恢复保留",
+        "分级展示不删证据、风险、人工批准或停止门禁",
+        "相关校验、现有回归、自检与四项目同步复查通过，并声明行为验证边界"
+      ],
+      "origin": "2026-10-20 用户在阶段三具体方案后回复继续；批准统一纠正轮次、预算连续性、两轮无进展暂停、输出分级",
+      "pointers": {},
+      "spawned": [],
+      "created_at": "2026-10-20T14:26:49+08:00",
+      "closed_at": "2026-10-20T15:46:19+08:00",
+      "close_note": "统一 FAIL 后纠正轮次（默认3）、末轮评审及恢复计数；同一知识问题预算累计，连续两轮无有效进展暂停；分级展示保留完整记录和人工门禁。六个 Skill 校验、21 项既有测试、doctor 24项0错误0警告、diff检查、四项目同步与复查通过。13类人工静态走查完成，非实际多轮Agent行为验证。证据：workstacks/methodology-framework-hardening/phase-3-verification.md。衍生C-004已归入报告。F-004待批准；不commit/push，不覆盖项目角色配置。"
+    },
+    {
+      "frame_id": "F-004",
+      "depth": 0,
+      "parent": null,
+      "title": "阶段四：组合行为回归",
+      "status": "done",
+      "goal": "",
+      "criteria": [
+        "八组场景记录真实执行或给定状态恢复证据，至少一条真实设计实施评审链",
+        "安全及门禁违规不计通过；失败修正最多两轮，保留首轮证据与未验证范围",
+        "必要修正通过校验与分发，完成证据报告和栈收尾，不提交"
+      ],
+      "origin": "2026-10-20 用户批准八组独立Agent隔离验证；最多两轮局部修正，不创建真实平台Goal，不修改业务项目",
+      "pointers": {},
+      "spawned": [],
+      "created_at": "2026-10-20T14:26:49+08:00",
+      "closed_at": "2026-10-20T16:25:41+08:00",
+      "close_note": "八组限定行为验证完成，根调度真实两阶段Designer/Executor/Reviewer通过（11项独立重跑）；原嵌套工具限制与首次Reviewer格式偏差保留，不外推未测范围。21项回归、doctor24项、四项目链接复查通过。源规则修正0/2；C5/C6归入phase-4-verification.md及phase-4-evidence/；未commit/push，未改业务项目或角色副本。"
+    }
+  ],
+  "captures": [
+    {
+      "capture_id": "C-001",
+      "at": "2026-10-20T14:28:13+08:00",
+      "text": "对齐模板时发现 guided-goal 已授权三角色但模板未列入合法调用入口；属于阶段一引用/模板一致性修复，保留仅显式批准当前阶段的限制。",
+      "found_in": "F-001",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "templates/codex-agents/; templates/cursor-agents/; skills/guided-goal-orchestrator/SKILL.md"
+    },
+    {
+      "capture_id": "C-002",
+      "at": "2026-10-20T14:34:10+08:00",
+      "text": "最后一帧 pop 后未清理当前指针，疑似导致合法收尾后 verify 失败；使用临时栈复现并检查匹配路径边界",
+      "found_in": "F-001",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "tests/test_stack_lifecycle.py; skills/campaign-work-stack/scripts/stack.py"
+    },
+    {
+      "capture_id": "C-003",
+      "at": "2026-10-20T14:39:39+08:00",
+      "text": "pop 非事务操作，失败时可能已写入终态；本阶段用出栈前后 verify 与恢复核对防止误报成功，不扩展为事务引擎改造",
+      "found_in": "F-001",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "skills/single-phase-execution-loop/SKILL.md; skills/guided-goal-orchestrator/SKILL.md; workstacks/methodology-framework-hardening/phase-1-verification.md"
+    },
+    {
+      "capture_id": "C-004",
+      "at": "2026-10-20T15:23:46+08:00",
+      "text": "阶段三边界核对：两轮无进展是流程暂停，不自动满足平台 Goal blocked；新 retry 口径恢复旧记录时不能清零或伪造历史。纳入本阶段共享规则与静态走查。",
+      "found_in": "F-003",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "workstacks/methodology-framework-hardening/phase-3-verification.md"
+    },
+    {
+      "capture_id": "C-005",
+      "at": "2026-10-20T16:02:56+08:00",
+      "text": "真实编排被测子会话没有二级代理调用接口，前置ready但未调用角色，正确停止且未伪造PASS；由具备collaboration工具的根会话接续测试调度，三个角色仍独立真实调用，不由根代理代替实施或评审。",
+      "found_in": "F-004",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "workstacks/methodology-framework-hardening/phase-4-verification.md"
+    },
+    {
+      "capture_id": "C-006",
+      "at": "2026-10-20T16:12:33+08:00",
+      "text": "真实 Reviewer 首次返回 PASS 但 checks 使用中文键而非契约 name/status/output；根调度输入未附规范 YAML 嵌套格式。保留原报告，核对来源后仅补齐既有契约再复核；未接受该报告为阶段门禁。",
+      "found_in": "F-004",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "workstacks/methodology-framework-hardening/phase-4-verification.md"
+    }
+  ],
+  "pop_log": [
+    {
+      "at": "2026-10-20T14:40:49+08:00",
+      "frame_id": "F-001",
+      "terminal": "done",
+      "note": "四项判据均完成：有栈/无栈路径、唯一收尾责任、历史规则与模板对齐；21项测试和仓库自检通过，四项目同步复查通过。证据见 phase-1-verification.md；完整Agent行为回归及项目角色副本刷新未执行。阶段二至四待批准。",
+      "spawned": [],
+      "remaining": [
+        "F-002",
+        "F-003",
+        "F-004"
+      ]
+    },
+    {
+      "at": "2026-10-20T14:54:38+08:00",
+      "frame_id": "F-002",
+      "terminal": "done",
+      "note": "四项判据完成：共享最小输入、质量要求贯穿角色、最小交接及权限边界已对齐；五场景静态走查完成，7个Skill校验、21项回归、仓库自检及四项目同步复查通过。证据见 phase-2-verification.md；未覆盖项目角色副本，未实跑多轮Agent。阶段三四待批准。",
+      "spawned": [],
+      "remaining": [
+        "F-003",
+        "F-004"
+      ]
+    },
+    {
+      "at": "2026-10-20T15:46:19+08:00",
+      "frame_id": "F-003",
+      "terminal": "done",
+      "note": "统一 FAIL 后纠正轮次（默认3）、末轮评审及恢复计数；同一知识问题预算累计，连续两轮无有效进展暂停；分级展示保留完整记录和人工门禁。六个 Skill 校验、21 项既有测试、doctor 24项0错误0警告、diff检查、四项目同步与复查通过。13类人工静态走查完成，非实际多轮Agent行为验证。证据：workstacks/methodology-framework-hardening/phase-3-verification.md。衍生C-004已归入报告。F-004待批准；不commit/push，不覆盖项目角色配置。",
+      "spawned": [],
+      "remaining": [
+        "F-004"
+      ]
+    },
+    {
+      "at": "2026-10-20T16:25:41+08:00",
+      "frame_id": "F-004",
+      "terminal": "done",
+      "note": "八组限定行为验证完成，根调度真实两阶段Designer/Executor/Reviewer通过（11项独立重跑）；原嵌套工具限制与首次Reviewer格式偏差保留，不外推未测范围。21项回归、doctor24项、四项目链接复查通过。源规则修正0/2；C5/C6归入phase-4-verification.md及phase-4-evidence/；未commit/push，未改业务项目或角色副本。",
+      "spawned": [],
+      "remaining": []
+    }
+  ],
+  "event_log": [
+    {
+      "seq": 1,
+      "at": "2026-10-20T14:26:49+08:00",
+      "kind": "pushed",
+      "frame_id": "F-001",
+      "detail": "阶段一：规则一致性修复"
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-20T14:26:49+08:00",
+      "kind": "activated",
+      "frame_id": "F-001",
+      "actor": "dfs",
+      "detail": "压栈时 --activate 抢占（父帧直接子帧，计划内深入）"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-20T14:26:49+08:00",
+      "kind": "pushed",
+      "frame_id": "F-002",
+      "detail": "阶段二：输入与交接（待批准）"
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-20T14:26:49+08:00",
+      "kind": "pushed",
+      "frame_id": "F-003",
+      "detail": "阶段三：收敛与输出（待批准）"
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-20T14:26:49+08:00",
+      "kind": "pushed",
+      "frame_id": "F-004",
+      "detail": "阶段四：组合行为回归（待批准）"
+    },
+    {
+      "seq": 6,
+      "at": "2026-10-20T14:26:49+08:00",
+      "kind": "pointer_switched",
+      "text": "当前栈指针：（无） → methodology-framework-hardening（一个对话只允许一个栈；被切走的栈保持原状，未关闭帧不会丢）"
+    },
+    {
+      "seq": 7,
+      "at": "2026-10-20T14:28:13+08:00",
+      "kind": "captured",
+      "capture_id": "C-001",
+      "frame_id": "F-001",
+      "disposition": "note",
+      "detail": "对齐模板时发现 guided-goal 已授权三角色但模板未列入合法调用入口；属于阶段一引用/模板一致性修复，保留仅显式批准当前阶段的限制。"
+    },
+    {
+      "seq": 8,
+      "at": "2026-10-20T14:28:13+08:00",
+      "kind": "resolved",
+      "capture_id": "C-001",
+      "disposition": "note",
+      "pointer": "templates/codex-agents/; templates/cursor-agents/; skills/guided-goal-orchestrator/SKILL.md"
+    },
+    {
+      "seq": 9,
+      "at": "2026-10-20T14:34:10+08:00",
+      "kind": "captured",
+      "capture_id": "C-002",
+      "frame_id": "F-001",
+      "disposition": "note",
+      "detail": "最后一帧 pop 后未清理当前指针，疑似导致合法收尾后 verify 失败；使用临时栈复现并检查匹配路径边界"
+    },
+    {
+      "seq": 10,
+      "at": "2026-10-20T14:34:10+08:00",
+      "kind": "resolved",
+      "capture_id": "C-002",
+      "disposition": "note",
+      "pointer": "tests/test_stack_lifecycle.py; skills/campaign-work-stack/scripts/stack.py"
+    },
+    {
+      "seq": 11,
+      "at": "2026-10-20T14:39:39+08:00",
+      "kind": "captured",
+      "capture_id": "C-003",
+      "frame_id": "F-001",
+      "disposition": "note",
+      "detail": "pop 非事务操作，失败时可能已写入终态；本阶段用出栈前后 verify 与恢复核对防止误报成功，不扩展为事务引擎改造"
+    },
+    {
+      "seq": 12,
+      "at": "2026-10-20T14:39:48+08:00",
+      "kind": "resolved",
+      "capture_id": "C-003",
+      "disposition": "note",
+      "pointer": "skills/single-phase-execution-loop/SKILL.md; skills/guided-goal-orchestrator/SKILL.md; workstacks/methodology-framework-hardening/phase-1-verification.md"
+    },
+    {
+      "seq": 13,
+      "at": "2026-10-20T14:40:49+08:00",
+      "kind": "popped",
+      "frame_id": "F-001",
+      "terminal": "done",
+      "detail": "四项判据均完成：有栈/无栈路径、唯一收尾责任、历史规则与模板对齐；21项测试和仓库自检通过，四项目同步复查通过。证据见 phase-1-verification"
+    },
+    {
+      "seq": 14,
+      "at": "2026-10-20T14:46:13+08:00",
+      "kind": "amended",
+      "frame_id": "F-002",
+      "detail": "title: '阶段二：输入与交接（待批准）' → '阶段二：输入与交接'; origin: '—' → '2026-10-20 用户批准本对话阶段二六部分修改方案'; criteria: 1 条 → 4 条（整组替换）; pointers: 合并 ['plan']"
+    },
+    {
+      "seq": 15,
+      "at": "2026-10-20T14:46:14+08:00",
+      "kind": "activated",
+      "frame_id": "F-002",
+      "actor": "user",
+      "detail": "阶段二：输入与交接"
+    },
+    {
+      "seq": 16,
+      "at": "2026-10-20T14:54:38+08:00",
+      "kind": "popped",
+      "frame_id": "F-002",
+      "terminal": "done",
+      "detail": "四项判据完成：共享最小输入、质量要求贯穿角色、最小交接及权限边界已对齐；五场景静态走查完成，7个Skill校验、21项回归、仓库自检及四项目同步复查通过。证据见"
+    },
+    {
+      "seq": 17,
+      "at": "2026-10-20T15:23:13+08:00",
+      "kind": "amended",
+      "frame_id": "F-003",
+      "detail": "title: '阶段三：收敛与输出（待批准）' → '阶段三：收敛与输出'; origin: '—' → '2026-10-20 用户在阶段三具体方案后回复继续；批准统一纠正轮次、预算连续性、两轮无进展暂停、输出分级'; criteria: 1 条 → 3 条（整组替换）"
+    },
+    {
+      "seq": 18,
+      "at": "2026-10-20T15:23:13+08:00",
+      "kind": "activated",
+      "frame_id": "F-003",
+      "actor": "user",
+      "detail": "阶段三：收敛与输出"
+    },
+    {
+      "seq": 19,
+      "at": "2026-10-20T15:23:46+08:00",
+      "kind": "captured",
+      "capture_id": "C-004",
+      "frame_id": "F-003",
+      "disposition": "note",
+      "detail": "阶段三边界核对：两轮无进展是流程暂停，不自动满足平台 Goal blocked；新 retry 口径恢复旧记录时不能清零或伪造历史。纳入本阶段共享规则与静态走查"
+    },
+    {
+      "seq": 20,
+      "at": "2026-10-20T15:45:36+08:00",
+      "kind": "resolved",
+      "capture_id": "C-004",
+      "disposition": "note",
+      "pointer": "workstacks/methodology-framework-hardening/phase-3-verification.md"
+    },
+    {
+      "seq": 21,
+      "at": "2026-10-20T15:46:19+08:00",
+      "kind": "popped",
+      "frame_id": "F-003",
+      "terminal": "done",
+      "detail": "统一 FAIL 后纠正轮次（默认3）、末轮评审及恢复计数；同一知识问题预算累计，连续两轮无有效进展暂停；分级展示保留完整记录和人工门禁。六个 Skill 校验、"
+    },
+    {
+      "seq": 22,
+      "at": "2026-10-20T15:54:26+08:00",
+      "kind": "amended",
+      "frame_id": "F-004",
+      "detail": "title: '阶段四：组合行为回归（待批准）' → '阶段四：组合行为回归'; origin: '—' → '2026-10-20 用户批准八组独立Agent隔离验证；最多两轮局部修正，不创建真实平台Goal，不修改业务项目'; criteria: 1 条 → 3 条（整组替换）"
+    },
+    {
+      "seq": 23,
+      "at": "2026-10-20T15:54:27+08:00",
+      "kind": "activated",
+      "frame_id": "F-004",
+      "actor": "user",
+      "detail": "阶段四：组合行为回归"
+    },
+    {
+      "seq": 24,
+      "at": "2026-10-20T16:02:56+08:00",
+      "kind": "captured",
+      "capture_id": "C-005",
+      "frame_id": "F-004",
+      "disposition": "note",
+      "detail": "真实编排被测子会话没有二级代理调用接口，前置ready但未调用角色，正确停止且未伪造PASS；由具备collaboration工具的根会话接续测试调度，三个角色"
+    },
+    {
+      "seq": 25,
+      "at": "2026-10-20T16:12:33+08:00",
+      "kind": "captured",
+      "capture_id": "C-006",
+      "frame_id": "F-004",
+      "disposition": "note",
+      "detail": "真实 Reviewer 首次返回 PASS 但 checks 使用中文键而非契约 name/status/output；根调度输入未附规范 YAML 嵌套格式。"
+    },
+    {
+      "seq": 26,
+      "at": "2026-10-20T16:13:11+08:00",
+      "kind": "resolved",
+      "capture_id": "C-006",
+      "disposition": "note",
+      "pointer": "workstacks/methodology-framework-hardening/phase-4-verification.md"
+    },
+    {
+      "seq": 27,
+      "at": "2026-10-20T16:20:49+08:00",
+      "kind": "resolved",
+      "capture_id": "C-005",
+      "disposition": "note",
+      "pointer": "workstacks/methodology-framework-hardening/phase-4-verification.md"
+    },
+    {
+      "seq": 28,
+      "at": "2026-10-20T16:25:41+08:00",
+      "kind": "popped",
+      "frame_id": "F-004",
+      "terminal": "done",
+      "detail": "八组限定行为验证完成，根调度真实两阶段Designer/Executor/Reviewer通过（11项独立重跑）；原嵌套工具限制与首次Reviewer格式偏差保"
+    }
+  ],
+  "title": "通用方法论框架加固"
+}

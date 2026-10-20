@@ -1,0 +1,252 @@
+{
+  "schema_version": "work-queue-stack-v3",
+  "campaign_id": "number-tools",
+  "bound_ledger": "workstacks/number-tools/goal-ledger.md",
+  "activation": "user_declared",
+  "updated_at": "2026-10-20T16:23:20+08:00",
+  "frames": [
+    {
+      "frame_id": "F-001",
+      "depth": 0,
+      "parent": null,
+      "title": "Phase 1 单值裁剪",
+      "status": "done",
+      "goal": "",
+      "criteria": [
+        "python3 -B -m unittest test_phase1 -v；Reviewer PASS；栈收尾校验通过"
+      ],
+      "origin": "",
+      "pointers": {},
+      "spawned": [],
+      "created_at": "2026-10-20T16:00:19+08:00",
+      "closed_at": "2026-10-20T16:15:28+08:00",
+      "close_note": "review_id=number-tools-phase-1 PASS；scratch/designer-p1.md、executor-p1.md、reviewer-p1.md；根独立重跑5项通过，三次只读文件核对无变更；C1根调度已恢复，C2/C3/C4已处置；retry0/2。原格式不合规报告保留，未被计作门禁。"
+    },
+    {
+      "frame_id": "F-002",
+      "depth": 0,
+      "parent": null,
+      "title": "Phase 2 批量裁剪",
+      "status": "done",
+      "goal": "",
+      "criteria": [
+        "Phase 1 完成；python3 -B -m unittest test_phase1 test_phase2 -v；Reviewer PASS；栈收尾校验通过"
+      ],
+      "origin": "",
+      "pointers": {},
+      "spawned": [],
+      "created_at": "2026-10-20T16:00:19+08:00",
+      "closed_at": "2026-10-20T16:23:20+08:00",
+      "close_note": "review_id=number-tools-phase-2 PASS；scratch/designer-p2.md、executor-p2.md、reviewer-p2.md；根独立11项通过，Reviewer前后21项基线一致；C5评审完成，同源风险复用C2；retry0/2。无剩余必需工作。"
+    }
+  ],
+  "captures": [
+    {
+      "capture_id": "C-001",
+      "at": "2026-10-20T16:01:44+08:00",
+      "text": "当前子会话无可调用 collaboration 接口；配置 ready；需父会话实际调度角色，未发生角色调用。见 scratch/orchestration-startup.md",
+      "found_in": "F-001",
+      "disposition": "blocks",
+      "frame_id": null,
+      "pointer": "scratch/orchestration-startup.md"
+    },
+    {
+      "capture_id": "C-002",
+      "at": "2026-10-20T16:15:10+08:00",
+      "text": "Executor/Reviewer 同源：未提交且文件未追踪，无Git历史diff；用完整文件哈希基线和独立测试补偿，非业务阻塞",
+      "found_in": "F-001",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "scratch/reviewer-p1.md"
+    },
+    {
+      "capture_id": "C-003",
+      "at": "2026-10-20T16:15:11+08:00",
+      "text": "Executor/Reviewer 同源：NaN和非数值语义未要求，不扩大本阶段验收",
+      "found_in": "F-001",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "plan.md"
+    },
+    {
+      "capture_id": "C-004",
+      "at": "2026-10-20T16:15:11+08:00",
+      "text": "Reviewer：Phase2尚未验收，已有授权及queued F-002；不重复建帧、不阻塞Phase1收尾",
+      "found_in": "F-001",
+      "disposition": "note",
+      "frame_id": "F-002",
+      "pointer": null
+    },
+    {
+      "capture_id": "C-005",
+      "at": "2026-10-20T16:20:48+08:00",
+      "text": "Executor phase2：实施测试11项通过，独立Reviewer尚待完成；常规门禁不得由实施报告替代，无新增权限需求",
+      "found_in": "F-002",
+      "disposition": "note",
+      "frame_id": null,
+      "pointer": "scratch/reviewer-p2.md"
+    }
+  ],
+  "pop_log": [
+    {
+      "at": "2026-10-20T16:15:28+08:00",
+      "frame_id": "F-001",
+      "terminal": "done",
+      "note": "review_id=number-tools-phase-1 PASS；scratch/designer-p1.md、executor-p1.md、reviewer-p1.md；根独立重跑5项通过，三次只读文件核对无变更；C1根调度已恢复，C2/C3/C4已处置；retry0/2。原格式不合规报告保留，未被计作门禁。",
+      "spawned": [],
+      "remaining": [
+        "F-002"
+      ]
+    },
+    {
+      "at": "2026-10-20T16:23:20+08:00",
+      "frame_id": "F-002",
+      "terminal": "done",
+      "note": "review_id=number-tools-phase-2 PASS；scratch/designer-p2.md、executor-p2.md、reviewer-p2.md；根独立11项通过，Reviewer前后21项基线一致；C5评审完成，同源风险复用C2；retry0/2。无剩余必需工作。",
+      "spawned": [],
+      "remaining": []
+    }
+  ],
+  "event_log": [
+    {
+      "seq": 1,
+      "at": "2026-10-20T16:00:19+08:00",
+      "kind": "pushed",
+      "frame_id": "F-001",
+      "detail": "Phase 1 单值裁剪"
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-20T16:00:19+08:00",
+      "kind": "activated",
+      "frame_id": "F-001",
+      "actor": "dfs",
+      "detail": "压栈时 --activate 抢占（父帧直接子帧，计划内深入）"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-20T16:00:19+08:00",
+      "kind": "pushed",
+      "frame_id": "F-002",
+      "detail": "Phase 2 批量裁剪"
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-20T16:01:44+08:00",
+      "kind": "captured",
+      "capture_id": "C-001",
+      "frame_id": "F-001",
+      "disposition": "blocks",
+      "detail": "当前子会话无可调用 collaboration 接口；配置 ready；需父会话实际调度角色，未发生角色调用。见 scratch/orchestration-s"
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-20T16:01:44+08:00",
+      "kind": "resolved",
+      "capture_id": "C-001",
+      "disposition": "blocks",
+      "pointer": "scratch/orchestration-startup.md"
+    },
+    {
+      "seq": 6,
+      "at": "2026-10-20T16:15:10+08:00",
+      "kind": "captured",
+      "capture_id": "C-002",
+      "frame_id": "F-001",
+      "disposition": "note",
+      "detail": "Executor/Reviewer 同源：未提交且文件未追踪，无Git历史diff；用完整文件哈希基线和独立测试补偿，非业务阻塞"
+    },
+    {
+      "seq": 7,
+      "at": "2026-10-20T16:15:10+08:00",
+      "kind": "resolved",
+      "capture_id": "C-002",
+      "disposition": "note",
+      "pointer": "scratch/reviewer-p1.md"
+    },
+    {
+      "seq": 8,
+      "at": "2026-10-20T16:15:11+08:00",
+      "kind": "captured",
+      "capture_id": "C-003",
+      "frame_id": "F-001",
+      "disposition": "note",
+      "detail": "Executor/Reviewer 同源：NaN和非数值语义未要求，不扩大本阶段验收"
+    },
+    {
+      "seq": 9,
+      "at": "2026-10-20T16:15:11+08:00",
+      "kind": "resolved",
+      "capture_id": "C-003",
+      "disposition": "note",
+      "pointer": "plan.md"
+    },
+    {
+      "seq": 10,
+      "at": "2026-10-20T16:15:11+08:00",
+      "kind": "captured",
+      "capture_id": "C-004",
+      "frame_id": "F-001",
+      "disposition": "note",
+      "detail": "Reviewer：Phase2尚未验收，已有授权及queued F-002；不重复建帧、不阻塞Phase1收尾"
+    },
+    {
+      "seq": 11,
+      "at": "2026-10-20T16:15:11+08:00",
+      "kind": "resolved",
+      "capture_id": "C-004",
+      "disposition": "note",
+      "frame_id": "F-002"
+    },
+    {
+      "seq": 12,
+      "at": "2026-10-20T16:15:28+08:00",
+      "kind": "popped",
+      "frame_id": "F-001",
+      "terminal": "done",
+      "detail": "review_id=number-tools-phase-1 PASS；scratch/designer-p1.md、executor-p1.md、review"
+    },
+    {
+      "seq": 13,
+      "at": "2026-10-20T16:16:00+08:00",
+      "kind": "activated",
+      "frame_id": "F-002",
+      "actor": "user",
+      "detail": "Phase 2 批量裁剪"
+    },
+    {
+      "seq": 14,
+      "at": "2026-10-20T16:20:48+08:00",
+      "kind": "captured",
+      "capture_id": "C-005",
+      "frame_id": "F-002",
+      "disposition": "note",
+      "detail": "Executor phase2：实施测试11项通过，独立Reviewer尚待完成；常规门禁不得由实施报告替代，无新增权限需求"
+    },
+    {
+      "seq": 15,
+      "at": "2026-10-20T16:20:49+08:00",
+      "kind": "resolved",
+      "capture_id": "C-005",
+      "disposition": "note",
+      "pointer": "scratch/executor-p2.md"
+    },
+    {
+      "seq": 16,
+      "at": "2026-10-20T16:23:08+08:00",
+      "kind": "resolved",
+      "capture_id": "C-005",
+      "disposition": "note",
+      "pointer": "scratch/reviewer-p2.md"
+    },
+    {
+      "seq": 17,
+      "at": "2026-10-20T16:23:20+08:00",
+      "kind": "popped",
+      "frame_id": "F-002",
+      "terminal": "done",
+      "detail": "review_id=number-tools-phase-2 PASS；scratch/designer-p2.md、executor-p2.md、review"
+    }
+  ],
+  "title": "number-tools 两阶段数值工具实现"
+}
